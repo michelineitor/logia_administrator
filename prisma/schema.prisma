@@ -1,0 +1,190 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  role          Role      @default(USER)
+  accounts      Account[]
+  sessions      Session[]
+  paymentsReg   Payment[] @relation("RegisteredPayments")
+  incomesReg    Income[]  @relation("RegisteredIncomes")
+  expensesReg   Expense[] @relation("RegisteredExpenses")
+}
+
+enum Role {
+  ADMIN
+  TESORERO
+  VICE_TESORERO
+  LUMINAR
+  USER
+}
+
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String? @db.Text
+  access_token       String? @db.Text
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String? @db.Text
+  session_state      String?
+  user               User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Member {
+  id          String   @id @default(cuid())
+  fullName    String
+  phone       String?
+  email       String?
+  status      Status   @default(ACTIVE)
+  entryDate   DateTime @default(now())
+  qrCodeUrl   String?
+  payments    Payment[]
+}
+
+enum Status {
+  ACTIVE
+  INACTIVE
+}
+
+model Payment {
+  id             String        @id @default(cuid())
+  memberId       String
+  amount         Float
+  currency       Currency      @default(UYU)
+  date           DateTime      @default(now())
+  monthPaid      Int
+  yearPaid       Int
+  method         PaymentMethod @default(CASH)
+  receiptUrl     String?
+  registeredById String?
+  
+  member         Member        @relation(fields: [memberId], references: [id])
+  registeredBy   User?         @relation("RegisteredPayments", fields: [registeredById], references: [id])
+}
+
+model Income {
+  id             String        @id @default(cuid())
+  amount         Float
+  currency       Currency      @default(UYU)
+  date           DateTime      @default(now())
+  type           IncomeType
+  method         PaymentMethod @default(CASH)
+  comment        String?
+  imageProofUrl  String?
+  registeredById String?
+
+  registeredBy   User?         @relation("RegisteredIncomes", fields: [registeredById], references: [id])
+}
+
+enum Currency {
+  UYU
+  USD
+}
+
+enum PaymentMethod {
+  CASH
+  BANK_TRANSFER
+  PENDING_DEPOSIT
+  OTHER
+}
+
+enum IncomeType {
+  COBRO_CUOTAS
+  INICIACIONES_AFILIACIONES
+  COLECTAS_SACO_BENEFICO
+  DONATIVOS_RECIBIDOS
+  IMPORTE_A_ENTREGAR
+  INGRESOS_EVENTUALES
+}
+
+model Expense {
+  id             String          @id @default(cuid())
+  amount         Float
+  currency       Currency        @default(UYU)
+  date           DateTime        @default(now())
+  category       ExpenseCategory
+  method         PaymentMethod   @default(CASH)
+  comment        String?
+  imageProofUrl  String?
+  registeredById String?
+
+  registeredBy   User?           @relation("RegisteredExpenses", fields: [registeredById], references: [id])
+}
+
+enum ExpenseCategory {
+  DERECHOS_INICIACION_AFILIACION
+  SELLO_TIMBRE_CORREOS
+  MATERIALES_OFICINA_IMPRESOS
+  SERVICIOS_GASTOS_BANCARIOS
+  SERVICIO_IMPORTE_RECIBIDO
+  MANTENIMIENTO_MUEBLES_EQUIPOS
+  GASTOS_ACTOS_FIESTA
+  GASTOS_FUNCIONARIOS_LOGIA
+  OFRENDAS_FLORALES
+  PAGOS_CUOTAS_HERMANOS_LOGIA
+  OBSEQUIOS
+  DONATIVOS_HERMANOS_LOGIA
+  DONATIVOS_HERMANOS_OTRAS_LOGIAS
+  AYUDA_MANTENIMIENTO_EDIFICIO
+  AMORTIZACION_PRESTAMOS_RECIBIDOS
+  MANTENIMIENTO_LIMPIEZA_INMUEBLE
+  ELECTRICIDAD_UTE
+  AGUA_OSE
+  INTERNET
+  ALQUILER_LOCAL_CASA_TEMPLO
+  ASEGURADORAS_GARANTIAS
+  INMOBILIARIAS
+  GASTOS_EVENTUALES
+  GASTOS_TRAMITES
+}
+
+model MonthlyBalance {
+  id                String   @id @default(cuid())
+  month             Int
+  year              Int
+  initialEquityUYU  Float
+  initialEquityUSD  Float
+  finalEquityUYU    Float
+  finalEquityUSD    Float
+  bankUYU           Float
+  bankUSD           Float
+  pendingDepositUYU Float
+  pendingDepositUSD Float
+  pettyCashUYU      Float
+  pettyCashUSD      Float    @default(0)
+  createdAt         DateTime @default(now())
+
+  @@unique([month, year])
+}
+
+model Config {
+  id               String   @id @default("system-config")
+  monthsForDebt    Int      @default(3)
+  baseCurrency     Currency @default(UYU)
+  telegramBotToken String?
+  telegramChatId   String?
+}
