@@ -19,7 +19,19 @@ export default async function MembersPage() {
   const role = (session?.user as any)?.role;
   if (role === 'MEMBER' || role === 'GUEST') redirect('/dashboard');
 
-  const members = await getMembers();
+  let members = [];
+  try {
+    members = await getMembers();
+  } catch (error: any) {
+    console.error("Error loading members:", error);
+    return (
+      <div className="p-8 text-center glass rounded-2xl border border-rose-500/30">
+        <h2 className="text-xl text-rose-500 font-bold mb-2">Error cargando miembros</h2>
+        <p className="text-muted-foreground">{error.message || "Error de conexión con la base de datos."}</p>
+        <p className="text-xs text-rose-400 mt-4 opacity-50">Por favor, verifica que la base de datos de producción esté sincronizada y desplegada correctamente.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -73,8 +85,8 @@ export default async function MembersPage() {
                     {member.imageUrl ? (
                       <img src={member.imageUrl} alt={member.fullName} className="w-10 h-10 rounded-full object-cover border border-white/10" />
                     ) : (
-                      <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center font-bold text-xs">
-                        {member.fullName.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase()}
+                      <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center font-bold text-xs shrink-0">
+                        {(member.fullName || 'NN').split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase()}
                       </div>
                     )}
                     <div>
