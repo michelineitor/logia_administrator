@@ -6,7 +6,9 @@ import {
   Wallet, 
   Settings, 
   LogOut,
-  Sun
+  Sun,
+  Scale,
+  User as UserIcon
 } from 'lucide-react';
 
 const menuItems = [
@@ -14,12 +16,23 @@ const menuItems = [
   { icon: Users, label: 'Miembros', href: '/members' },
   { icon: CreditCard, label: 'Pagos', href: '/payments' },
   { icon: Wallet, label: 'Tesorería', href: '/treasury' },
+  { icon: Scale, label: 'Arqueo de Caja', href: '/treasury/balance' },
   { icon: Settings, label: 'Configuración', href: '/settings' },
+  { icon: UserIcon, label: 'Mi Perfil', href: '/profile' }
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ isOpen, setIsOpen, role }: { isOpen: boolean, setIsOpen: (val: boolean) => void, role?: string }) {
+  const isBasic = role === 'MEMBER' || role === 'GUEST';
+
+  const visibleItems = menuItems.filter(item => {
+    if (isBasic) {
+      return item.href === '/dashboard' || item.href === '/profile';
+    }
+    return true;
+  });
+
   return (
-    <aside className="sidebar glass border-r border-white/5">
+    <aside className={`sidebar glass border-r border-white/5 transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
       <div className="flex items-center gap-3 mb-10 px-2">
         <div className="p-2 bg-primary/10 rounded-lg border border-primary/20">
           <Sun className="w-6 h-6 text-primary" />
@@ -31,7 +44,7 @@ export default function Sidebar() {
       </div>
 
       <nav className="flex-1 space-y-2">
-        {menuItems.map((item) => (
+        {visibleItems.map((item) => (
           <Link 
             key={item.href} 
             href={item.href}

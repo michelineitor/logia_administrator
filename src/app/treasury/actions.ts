@@ -4,6 +4,9 @@ import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 import { IncomeType, ExpenseCategory, Currency, PaymentMethod } from "@prisma/client"
 
+import { promises as fs } from 'fs';
+import path from 'path';
+
 export async function getTransactions() {
   const incomes = await prisma.income.findMany({ orderBy: { date: 'desc' } });
   const expenses = await prisma.expense.findMany({ orderBy: { date: 'desc' } });
@@ -17,7 +20,8 @@ export async function getTransactions() {
     currency: inc.currency,
     date: inc.date,
     comment: inc.comment,
-    method: inc.method
+    method: inc.method,
+    imageProofUrl: inc.imageProofUrl
   }));
 
   const formattedExpenses = expenses.map((exp: any) => ({
@@ -29,22 +33,53 @@ export async function getTransactions() {
     currency: exp.currency,
     date: exp.date,
     comment: exp.comment,
-    method: exp.method
+    method: exp.method,
+    imageProofUrl: exp.imageProofUrl
   }));
 
   const all = [...formattedIncomes, ...formattedExpenses].sort((a, b) => b.date.getTime() - a.date.getTime());
   return all;
 }
 
+async function handleFileUpload(formData: FormData): Promise<string> {
+  const file = formData.get("imageProof") as File;
+  if (!file || file.size === 0) {
+    throw new Error("El comprobante (foto) es obligatorio");
+  }
+
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const ext = file.name.split('.').pop() || 'jpg';
+  const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${ext}`;
+  const uploadDir = path.join(process.cwd(), 'public', 'uploads');
+  
+  await fs.mkdir(uploadDir, { recursive: true });
+  await fs.writeFile(path.join(uploadDir, fileName), buffer);
+  
+  return `/uploads/${fileName}`;
+}
+
+function parseDate(formData: FormData): Date {
+  const dateStr = formData.get("date") as string;
+  if (dateStr) {
+    return new Date(`${dateStr}T12:00:00Z`);
+  }
+  return new Date();
+}
+
 export async function createIncome(formData: FormData) {
   try {
+    const photoUrl = await handleFileUpload(formData);
+    const parsedDate = parseDate(formData);
+
     await prisma.income.create({
       data: {
+        date: parsedDate,
         amount: parseFloat(formData.get("amount") as string),
         currency: (formData.get("currency") as Currency) || "UYU",
         type: formData.get("type") as IncomeType,
         method: (formData.get("method") as PaymentMethod) || "CASH",
         comment: (formData.get("comment") as string) || null,
+        imageProofUrl: photoUrl,
       }
     });
     revalidatePath('/treasury');
@@ -56,13 +91,18 @@ export async function createIncome(formData: FormData) {
 
 export async function createExpense(formData: FormData) {
   try {
+    const photoUrl = await handleFileUpload(formData);
+    const parsedDate = parseDate(formData);
+
     await prisma.expense.create({
       data: {
+        date: parsedDate,
         amount: parseFloat(formData.get("amount") as string),
         currency: (formData.get("currency") as Currency) || "UYU",
         category: formData.get("category") as ExpenseCategory,
         method: (formData.get("method") as PaymentMethod) || "CASH",
         comment: (formData.get("comment") as string) || null,
+        imageProofUrl: photoUrl,
       }
     });
     revalidatePath('/treasury');

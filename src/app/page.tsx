@@ -1,6 +1,32 @@
-import Link from 'next/link';
+"use client";
+
+import { signIn } from "next-auth/react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
+  const router = useRouter();
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+
+    const res = await signIn("credentials", {
+      username,
+      password,
+      redirect: false,
+    });
+
+    if (res?.error) {
+      setError("Credenciales incorrectas. Inténtalo de nuevo.");
+    } else {
+      router.push("/dashboard");
+    }
+  };
+
   return (
     <main className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden">
       {/* Background Decorative Elements */}
@@ -20,15 +46,38 @@ export default function Home() {
           <p className="text-muted-foreground text-sm uppercase tracking-widest">Caballeros de la Luz</p>
         </div>
 
-        <div className="space-y-4 pt-4">
-          <p className="text-sm text-foreground/80">Acceso restringido al personal administrativo</p>
-          <button className="btn-primary w-full flex items-center justify-center gap-2">
-            <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor">
-              <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.908 3.152-1.928 4.176-1.288 1.288-3.312 2.696-7.392 2.696-6.64 0-11.776-5.376-11.776-12s5.136-12 11.776-12c3.584 0 6.136 1.416 8.12 3.312l2.304-2.304C18.592 1.456 15.592 0 11.48 0 5.144 0 0 5.144 0 11.48s5.144 11.48 11.48 11.48c3.424 0 6.016-1.128 8.032-3.232 2.08-2.08 2.736-4.992 2.736-7.392 0-.712-.064-1.392-.184-2.016h-10.608z"/>
-            </svg>
-            Continuar con Google
+        <form onSubmit={handleSubmit} className="space-y-4 pt-4 text-left">
+          <p className="text-sm text-foreground/80 text-center mb-6">Acceso restringido al personal administrativo</p>
+          
+          {error && <div className="text-red-500 text-sm text-center mb-4">{error}</div>}
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-foreground">Usuario</label>
+            <input 
+              type="text" 
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+              className="w-full bg-background/50 border border-border rounded-lg px-4 py-2 text-foreground focus:outline-none focus:border-primary transition-colors"
+              placeholder="Ej: michel"
+            />
+          </div>
+
+          <div className="space-y-2 pb-4">
+            <label className="text-sm font-medium text-foreground">Contraseña</label>
+            <input 
+              type="password" 
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="w-full bg-background/50 border border-border rounded-lg px-4 py-2 text-foreground focus:outline-none focus:border-primary transition-colors"
+            />
+          </div>
+
+          <button type="submit" className="btn-primary w-full flex items-center justify-center gap-2">
+            Ingresar al Sistema
           </button>
-        </div>
+        </form>
 
         <div className="pt-6 border-t border-white/5 text-[10px] text-muted-foreground uppercase tracking-widest">
           Socio-Caridad-Unión

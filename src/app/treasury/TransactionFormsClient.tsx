@@ -78,22 +78,34 @@ export default function TransactionFormsClient() {
             )}
 
             <form onSubmit={activeForm === 'INCOME' ? handleIncomeSubmit : handleExpenseSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-white/70 mb-1">Monto *</label>
-                <div className="flex gap-2">
-                  <select name="currency" className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none">
-                    <option value="UYU">UYU</option>
-                    <option value="USD">USD</option>
-                  </select>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-white/70 mb-1">Fecha *</label>
                   <input 
-                    type="number" 
-                    name="amount"
-                    step="0.01"
-                    min="0"
+                    type="date" 
+                    name="date"
                     required
-                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-primary/50 transition-colors"
-                    placeholder="0.00"
+                    defaultValue={new Date().toISOString().split('T')[0]}
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-primary/50 transition-colors text-white [color-scheme:dark]"
                   />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-white/70 mb-1">Monto *</label>
+                  <div className="flex gap-2">
+                    <select name="currency" className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none text-white">
+                      <option value="UYU">UYU</option>
+                      <option value="USD">USD</option>
+                    </select>
+                    <input 
+                      type="number" 
+                      name="amount"
+                      step="0.01"
+                      min="0"
+                      required
+                      className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-primary/50 transition-colors"
+                      placeholder="0.00"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -143,6 +155,17 @@ export default function TransactionFormsClient() {
                   name="comment"
                   className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-primary/50 transition-colors h-24 resize-none"
                   placeholder="Detalles adicionales..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-white/70 mb-1">Comprobante (Foto) *</label>
+                <input 
+                  type="file" 
+                  name="imageProof"
+                  accept="image/*"
+                  required
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-primary/50 transition-colors text-white/70 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/20 file:text-primary hover:file:bg-primary/30 cursor-pointer"
                 />
               </div>
 

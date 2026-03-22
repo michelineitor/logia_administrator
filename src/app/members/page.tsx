@@ -5,10 +5,17 @@ import {
   QrCode,
   ExternalLink
 } from 'lucide-react';
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { redirect } from "next/navigation";
 import { getMembers } from './actions';
 import MemberFormClient from './MemberFormClient';
 
 export default async function MembersPage() {
+  const session = await getServerSession(authOptions);
+  const role = (session?.user as any)?.role;
+  if (role === 'MEMBER' || role === 'GUEST') redirect('/dashboard');
+
   const members = await getMembers();
 
   return (

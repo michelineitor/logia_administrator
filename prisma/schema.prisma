@@ -9,16 +9,20 @@ datasource db {
 
 model User {
   id            String    @id @default(cuid())
+  username      String?   @unique
+  password      String?
   name          String?
   email         String?   @unique
   emailVerified DateTime?
   image         String?
-  role          Role      @default(USER)
+  role          Role      @default(MEMBER)
+  member        Member?   @relation("MemberUser")
   accounts      Account[]
   sessions      Session[]
   paymentsReg   Payment[] @relation("RegisteredPayments")
   incomesReg    Income[]  @relation("RegisteredIncomes")
   expensesReg   Expense[] @relation("RegisteredExpenses")
+  cashCountsReg CashCount[] @relation("RegisteredCashCounts")
 }
 
 enum Role {
@@ -26,7 +30,8 @@ enum Role {
   TESORERO
   VICE_TESORERO
   LUMINAR
-  USER
+  MEMBER
+  GUEST
 }
 
 model Account {
@@ -62,6 +67,8 @@ model Member {
   status      Status   @default(ACTIVE)
   entryDate   DateTime @default(now())
   qrCodeUrl   String?
+  userId      String?  @unique
+  user        User?    @relation("MemberUser", fields: [userId], references: [id])
   payments    Payment[]
 }
 
@@ -79,11 +86,19 @@ model Payment {
   monthPaid      Int
   yearPaid       Int
   method         PaymentMethod @default(CASH)
+  status         PaymentStatus @default(COMPLETADO)
   receiptUrl     String?
   registeredById String?
   
   member         Member        @relation(fields: [memberId], references: [id])
   registeredBy   User?         @relation("RegisteredPayments", fields: [registeredById], references: [id])
+}
+
+enum PaymentStatus {
+  PENDIENTE
+  COMPLETADO
+  ERROR
+  CANCELADO
 }
 
 model Income {
@@ -182,9 +197,37 @@ model MonthlyBalance {
 }
 
 model Config {
-  id               String   @id @default("system-config")
-  monthsForDebt    Int      @default(3)
-  baseCurrency     Currency @default(UYU)
-  telegramBotToken String?
-  telegramChatId   String?
+  id                 String   @id @default("system-config")
+  monthsForDebt      Int      @default(3)
+  baseCurrency       Currency @default(UYU)
+  monthlyFeeAmount   Float    @default(500)
+  monthlyFeeCurrency Currency @default(UYU)
+  telegramBotToken   String?
+  telegramChatId     String?
+}
+
+model CashCount {
+  id                String   @id @default(cuid())
+  date              DateTime @default(now())
+  
+  previousCountId   String?
+  
+  expectedUYU       Float
+  expectedUSD       Float
+  
+  actualBankUYU     Float    @default(0)
+  actualBankUSD     Float    @default(0)
+  actualCashUYU     Float    @default(0)
+  actualCashUSD     Float    @default(0)
+
+  totalActualUYU    Float    @default(0)
+  totalActualUSD    Float    @default(0)
+
+  deviationUYU      Float    @default(0)
+  deviationUSD      Float    @default(0)
+
+  registeredById    String?
+  registeredBy      User?    @relation("RegisteredCashCounts", fields: [registeredById], references: [id])
+  
+  observations      String?
 }
