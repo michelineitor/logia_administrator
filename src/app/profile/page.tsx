@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getProfileData } from "./actions";
-import ProfileClient from "./ProfileClient";
+import ProfileClient from "@/app/profile/ProfileClient";
 
 export const dynamic = 'force-dynamic';
 

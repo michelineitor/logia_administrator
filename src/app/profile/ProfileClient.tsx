@@ -49,12 +49,21 @@ export default function ProfileClient({ initialData, userId }: any) {
       <div className="lg:col-span-2 space-y-8">
         <form onSubmit={handleSubmit} className="glass p-8 rounded-3xl border border-white/5 space-y-8">
           <div className="flex items-center gap-4 border-b border-white/5 pb-6">
-            <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-2xl">
-              {username?.charAt(0).toUpperCase()}
-            </div>
+            {member?.imageUrl ? (
+              <img src={member.imageUrl} alt={fullName} className="w-16 h-16 rounded-full object-cover border-2 border-primary/20" />
+            ) : (
+              <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-2xl">
+                {username?.charAt(0).toUpperCase()}
+              </div>
+            )}
             <div>
               <h3 className="text-xl font-bold">{fullName || username}</h3>
-              <p className="text-sm text-primary uppercase font-bold tracking-widest">{getRoleLabel(user.role)}</p>
+              <div className="flex items-center gap-2">
+                <p className="text-sm text-primary uppercase font-bold tracking-widest">{getRoleLabel(user.role)}</p>
+                {member?.memberNumber && (
+                   <span className="text-[10px] bg-white/10 px-2 py-0.5 rounded text-white/70 font-mono tracking-widest">Nº {member.memberNumber}</span>
+                )}
+              </div>
             </div>
           </div>
 

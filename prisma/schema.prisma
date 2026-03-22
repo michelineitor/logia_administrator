@@ -8,46 +8,38 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  username      String?   @unique
+  id            String      @id @default(cuid())
+  username      String?     @unique
   password      String?
   name          String?
-  email         String?   @unique
+  email         String?     @unique
   emailVerified DateTime?
   image         String?
-  role          Role      @default(MEMBER)
-  member        Member?   @relation("MemberUser")
+  role          Role        @default(MEMBER)
   accounts      Account[]
-  sessions      Session[]
-  paymentsReg   Payment[] @relation("RegisteredPayments")
-  incomesReg    Income[]  @relation("RegisteredIncomes")
-  expensesReg   Expense[] @relation("RegisteredExpenses")
   cashCountsReg CashCount[] @relation("RegisteredCashCounts")
-}
-
-enum Role {
-  ADMIN
-  TESORERO
-  VICE_TESORERO
-  LUMINAR
-  MEMBER
-  GUEST
+  expensesReg   Expense[]   @relation("RegisteredExpenses")
+  incomesReg    Income[]    @relation("RegisteredIncomes")
+  member        Member?     @relation("MemberUser")
+  paymentsReg   Payment[]   @relation("RegisteredPayments")
+  sessions      Session[]
 }
 
 model Account {
-  id                 String  @id @default(cuid())
-  userId             String
-  type               String
-  provider           String
-  providerAccountId  String
-  refresh_token      String? @db.Text
-  access_token       String? @db.Text
-  expires_at         Int?
-  token_type         String?
-  scope              String?
-  id_token           String? @db.Text
-  session_state      String?
-  user               User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@unique([provider, providerAccountId])
 }
 
@@ -60,21 +52,19 @@ model Session {
 }
 
 model Member {
-  id          String   @id @default(cuid())
-  fullName    String
-  phone       String?
-  email       String?
-  status      Status   @default(ACTIVE)
-  entryDate   DateTime @default(now())
-  qrCodeUrl   String?
-  userId      String?  @unique
-  user        User?    @relation("MemberUser", fields: [userId], references: [id])
-  payments    Payment[]
-}
-
-enum Status {
-  ACTIVE
-  INACTIVE
+  id           String         @id @default(cuid())
+  memberNumber String?        @unique
+  fullName     String
+  phone        String?
+  email        String?
+  position     MemberPosition @default(DISCIPULO)
+  imageUrl     String?
+  status       Status         @default(ACTIVE)
+  entryDate    DateTime       @default(now())
+  qrCodeUrl    String?
+  userId       String?        @unique
+  user         User?          @relation("MemberUser", fields: [userId], references: [id])
+  payments     Payment[]
 }
 
 model Payment {
@@ -89,16 +79,8 @@ model Payment {
   status         PaymentStatus @default(COMPLETADO)
   receiptUrl     String?
   registeredById String?
-  
   member         Member        @relation(fields: [memberId], references: [id])
   registeredBy   User?         @relation("RegisteredPayments", fields: [registeredById], references: [id])
-}
-
-enum PaymentStatus {
-  PENDIENTE
-  COMPLETADO
-  ERROR
-  CANCELADO
 }
 
 model Income {
@@ -111,29 +93,7 @@ model Income {
   comment        String?
   imageProofUrl  String?
   registeredById String?
-
   registeredBy   User?         @relation("RegisteredIncomes", fields: [registeredById], references: [id])
-}
-
-enum Currency {
-  UYU
-  USD
-}
-
-enum PaymentMethod {
-  CASH
-  BANK_TRANSFER
-  PENDING_DEPOSIT
-  OTHER
-}
-
-enum IncomeType {
-  COBRO_CUOTAS
-  INICIACIONES_AFILIACIONES
-  COLECTAS_SACO_BENEFICO
-  DONATIVOS_RECIBIDOS
-  IMPORTE_A_ENTREGAR
-  INGRESOS_EVENTUALES
 }
 
 model Expense {
@@ -146,35 +106,7 @@ model Expense {
   comment        String?
   imageProofUrl  String?
   registeredById String?
-
   registeredBy   User?           @relation("RegisteredExpenses", fields: [registeredById], references: [id])
-}
-
-enum ExpenseCategory {
-  DERECHOS_INICIACION_AFILIACION
-  SELLO_TIMBRE_CORREOS
-  MATERIALES_OFICINA_IMPRESOS
-  SERVICIOS_GASTOS_BANCARIOS
-  SERVICIO_IMPORTE_RECIBIDO
-  MANTENIMIENTO_MUEBLES_EQUIPOS
-  GASTOS_ACTOS_FIESTA
-  GASTOS_FUNCIONARIOS_LOGIA
-  OFRENDAS_FLORALES
-  PAGOS_CUOTAS_HERMANOS_LOGIA
-  OBSEQUIOS
-  DONATIVOS_HERMANOS_LOGIA
-  DONATIVOS_HERMANOS_OTRAS_LOGIAS
-  AYUDA_MANTENIMIENTO_EDIFICIO
-  AMORTIZACION_PRESTAMOS_RECIBIDOS
-  MANTENIMIENTO_LIMPIEZA_INMUEBLE
-  ELECTRICIDAD_UTE
-  AGUA_OSE
-  INTERNET
-  ALQUILER_LOCAL_CASA_TEMPLO
-  ASEGURADORAS_GARANTIAS
-  INMOBILIARIAS
-  GASTOS_EVENTUALES
-  GASTOS_TRAMITES
 }
 
 model MonthlyBalance {
@@ -207,27 +139,105 @@ model Config {
 }
 
 model CashCount {
-  id                String   @id @default(cuid())
-  date              DateTime @default(now())
-  
-  previousCountId   String?
-  
-  expectedUYU       Float
-  expectedUSD       Float
-  
-  actualBankUYU     Float    @default(0)
-  actualBankUSD     Float    @default(0)
-  actualCashUYU     Float    @default(0)
-  actualCashUSD     Float    @default(0)
+  id              String   @id @default(cuid())
+  date            DateTime @default(now())
+  previousCountId String?
+  expectedUYU     Float
+  expectedUSD     Float
+  actualBankUYU   Float    @default(0)
+  actualBankUSD   Float    @default(0)
+  actualCashUYU   Float    @default(0)
+  actualCashUSD   Float    @default(0)
+  totalActualUYU  Float    @default(0)
+  totalActualUSD  Float    @default(0)
+  deviationUYU    Float    @default(0)
+  deviationUSD    Float    @default(0)
+  registeredById  String?
+  observations    String?
+  registeredBy    User?    @relation("RegisteredCashCounts", fields: [registeredById], references: [id])
+}
 
-  totalActualUYU    Float    @default(0)
-  totalActualUSD    Float    @default(0)
+enum Role {
+  ADMIN
+  TESORERO
+  VICE_TESORERO
+  LUMINAR
+  MEMBER
+  GUEST
+}
 
-  deviationUYU      Float    @default(0)
-  deviationUSD      Float    @default(0)
+enum MemberPosition {
+  DISCIPULO
+  DISCIPULO_HONOR
+  CABALLERO_LUZ
+  LUMINAR
+  VICE_LUMINAR
+  PATRIARCA
+  LPI
+  SECRETARIO_ACTAS
+  VICE_SECRETARIO
+  TESORERO
+  VICE_TESORERO
+  GUARDA_TEMPLO_INTERIOR
+  GUARDA_TEMPLO_EXTERIOR
+}
 
-  registeredById    String?
-  registeredBy      User?    @relation("RegisteredCashCounts", fields: [registeredById], references: [id])
-  
-  observations      String?
+enum Status {
+  ACTIVE
+  INACTIVE
+}
+
+enum PaymentStatus {
+  PENDIENTE
+  COMPLETADO
+  ERROR
+  CANCELADO
+}
+
+enum Currency {
+  UYU
+  USD
+}
+
+enum PaymentMethod {
+  CASH
+  BANK_TRANSFER
+  PENDING_DEPOSIT
+  OTHER
+}
+
+enum IncomeType {
+  COBRO_CUOTAS
+  INICIACIONES_AFILIACIONES
+  COLECTAS_SACO_BENEFICO
+  DONATIVOS_RECIBIDOS
+  IMPORTE_A_ENTREGAR
+  INGRESOS_EVENTUALES
+}
+
+enum ExpenseCategory {
+  DERECHOS_INICIACION_AFILIACION
+  SELLO_TIMBRE_CORREOS
+  MATERIALES_OFICINA_IMPRESOS
+  SERVICIOS_GASTOS_BANCARIOS
+  SERVICIO_IMPORTE_RECIBIDO
+  MANTENIMIENTO_MUEBLES_EQUIPOS
+  GASTOS_ACTOS_FIESTA
+  GASTOS_FUNCIONARIOS_LOGIA
+  OFRENDAS_FLORALES
+  PAGOS_CUOTAS_HERMANOS_LOGIA
+  OBSEQUIOS
+  DONATIVOS_HERMANOS_LOGIA
+  DONATIVOS_HERMANOS_OTRAS_LOGIAS
+  AYUDA_MANTENIMIENTO_EDIFICIO
+  AMORTIZACION_PRESTAMOS_RECIBIDOS
+  MANTENIMIENTO_LIMPIEZA_INMUEBLE
+  ELECTRICIDAD_UTE
+  AGUA_OSE
+  INTERNET
+  ALQUILER_LOCAL_CASA_TEMPLO
+  ASEGURADORAS_GARANTIAS
+  INMOBILIARIAS
+  GASTOS_EVENTUALES
+  GASTOS_TRAMITES
 }

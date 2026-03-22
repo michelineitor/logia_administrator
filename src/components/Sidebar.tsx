@@ -8,6 +8,7 @@ import {
   LogOut,
   Sun,
   Scale,
+  Shield,
   User as UserIcon
 } from 'lucide-react';
 
@@ -17,6 +18,7 @@ const menuItems = [
   { icon: CreditCard, label: 'Pagos', href: '/payments' },
   { icon: Wallet, label: 'Tesorería', href: '/treasury' },
   { icon: Scale, label: 'Arqueo de Caja', href: '/treasury/balance' },
+  { icon: Shield, label: 'Usuarios', href: '/settings/users' },
   { icon: Settings, label: 'Configuración', href: '/settings' },
   { icon: UserIcon, label: 'Mi Perfil', href: '/profile' }
 ];

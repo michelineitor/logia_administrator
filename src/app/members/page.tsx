@@ -51,6 +51,7 @@ export default async function MembersPage() {
           <thead>
             <tr className="border-b border-white/5 bg-white/[0.02]">
               <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">Miembro</th>
+              <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">Cargo</th>
               <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">Contacto</th>
               <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">Estado</th>
               <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">Ingreso</th>
@@ -60,19 +61,31 @@ export default async function MembersPage() {
           <tbody className="divide-y divide-white/5">
             {members.length === 0 ? (
               <tr>
-                <td colSpan={5} className="py-8 text-center text-muted-foreground">No hay miembros registrados.</td>
+                <td colSpan={6} className="py-8 text-center text-muted-foreground">No hay miembros registrados.</td>
               </tr>
-            ) : members.map((member) => (
+            ) : members.map((member: any) => (
               <tr key={member.id} className="hover:bg-white/[0.02] transition-colors">
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center font-bold text-xs">
-                      {member.fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
-                    </div>
+                    {member.imageUrl ? (
+                      <img src={member.imageUrl} alt={member.fullName} className="w-10 h-10 rounded-full object-cover border border-white/10" />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center font-bold text-xs">
+                        {member.fullName.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase()}
+                      </div>
+                    )}
                     <div>
                       <p className="text-sm font-medium">{member.fullName}</p>
+                      {member.memberNumber && (
+                        <p className="text-[10px] font-bold text-primary uppercase tracking-widest">Nº {member.memberNumber}</p>
+                      )}
                     </div>
                   </div>
+                </td>
+                <td className="px-6 py-4">
+                  <span className="text-xs font-medium text-foreground/80 bg-white/5 px-2 py-1 rounded-lg">
+                    {member.position || 'DISCIPULO'}
+                  </span>
                 </td>
                 <td className="px-6 py-4">
                   <p className="text-xs text-muted-foreground">{member.email || '-'}</p>
