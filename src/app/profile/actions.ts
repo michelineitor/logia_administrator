@@ -19,19 +19,26 @@ export async function getProfileData(userId: string) {
 
   if (user?.member && user.role !== 'ADMIN' && user.role !== ('GUEST' as any)) {
      const member = user.member as any;
-     const entryDate = new Date(member.entryDate);
-     const now = new Date();
      
-     let monthsExpected = (now.getFullYear() - entryDate.getFullYear()) * 12 + (now.getMonth() - entryDate.getMonth()) + 1;
-     if (monthsExpected < 1) monthsExpected = 1;
+     if (member.status === 'EXONERATED') {
+       status = "EXONERADO";
+       debtCount = 0;
+       debtAmount = 0;
+     } else {
+       const entryDate = new Date(member.entryDate);
+       const now = new Date();
+       
+       let monthsExpected = (now.getFullYear() - entryDate.getFullYear()) * 12 + (now.getMonth() - entryDate.getMonth()) + 1;
+       if (monthsExpected < 1) monthsExpected = 1;
 
-     const paymentsMade = member.payments.length;
-     debtCount = monthsExpected - paymentsMade;
-     if (debtCount < 0) debtCount = 0;
+       const paymentsMade = member.payments.length;
+       debtCount = monthsExpected - paymentsMade;
+       if (debtCount < 0) debtCount = 0;
 
-     if (debtCount > 0) {
-       status = "DEUDA";
-       debtAmount = debtCount * fee;
+       if (debtCount > 0) {
+         status = "DEUDA";
+         debtAmount = debtCount * fee;
+       }
      }
   }
 

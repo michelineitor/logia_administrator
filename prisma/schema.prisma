@@ -24,6 +24,7 @@ model User {
   paymentsReg   Payment[]   @relation("RegisteredPayments")
   sessions      Session[]
   registeredSessions LodgeSession[] @relation("RegisteredSessions")
+  memberHistories    MemberHistory[]
 }
 
 model Account {
@@ -58,14 +59,29 @@ model Member {
   fullName     String
   phone        String?
   email        String?
-  position     MemberPosition @default(DISCIPULO)
+  position     MemberPosition @default(MIEMBRO)
+  category     MemberCategory @default(DISCIPULO)
   imageUrl     String?
   status       Status         @default(ACTIVE)
   entryDate    DateTime       @default(now())
   qrCodeUrl    String?
+  relevantData String?        @db.Text
   userId       String?        @unique
   user         User?          @relation("MemberUser", fields: [userId], references: [id])
   payments     Payment[]
+  history      MemberHistory[]
+}
+
+model MemberHistory {
+  id          String         @id @default(cuid())
+  memberId    String
+  member      Member         @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  field       String         // "status", "category", "position"
+  oldValue    String?
+  newValue    String?
+  changeDate  DateTime       @default(now())
+  changedById String?
+  changedBy   User?          @relation(fields: [changedById], references: [id])
 }
 
 model Payment {
@@ -181,10 +197,16 @@ enum Role {
   GUEST
 }
 
-enum MemberPosition {
+enum MemberCategory {
   DISCIPULO
   DISCIPULO_HONOR
   CABALLERO_LUZ
+  PASADO_JEFE
+  LUMINAR_PASADO
+}
+
+enum MemberPosition {
+  MIEMBRO
   LUMINAR
   VICE_LUMINAR
   PATRIARCA
@@ -200,6 +222,7 @@ enum MemberPosition {
 enum Status {
   ACTIVE
   INACTIVE
+  EXONERATED
 }
 
 enum PaymentStatus {

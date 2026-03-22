@@ -11,13 +11,22 @@ import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { getMembers } from './actions';
 import MemberFormClient from './MemberFormClient';
+import MemberActionsClient from './MemberActionsClient';
+import { prisma } from "@/lib/prisma";
 
 export const dynamic = 'force-dynamic';
 
 export default async function MembersPage() {
   const session = await getServerSession(authOptions);
-  const role = (session?.user as any)?.role;
+  if (!session?.user) redirect('/');
+  const role = (session.user as any).role;
   if (role === 'MEMBER' || role === 'GUEST') redirect('/dashboard');
+
+  const currentUser = await prisma.user.findUnique({
+    where: { id: (session.user as any).id },
+    include: { member: true }
+  });
+  const currentUserPosition = currentUser?.member?.position;
 
   let members = [];
   try {
@@ -40,7 +49,7 @@ export default async function MembersPage() {
           <Users className="w-5 h-5 text-primary" />
           Gestión de Miembros
         </h2>
-        <MemberFormClient />
+        <MemberFormClient currentUserRole={role} currentUserPosition={currentUserPosition} />
       </div>
 
       {/* Search & Filters */}
@@ -66,6 +75,7 @@ export default async function MembersPage() {
           <thead>
             <tr className="border-b border-white/5 bg-white/[0.02]">
               <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">Miembro</th>
+              <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">Rango</th>
               <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">Cargo</th>
               <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">Contacto</th>
               <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">Estado</th>
@@ -106,8 +116,13 @@ export default async function MembersPage() {
                   </div>
                 </td>
                 <td className="px-6 py-4">
-                  <span className="text-xs font-medium text-foreground/80 bg-white/5 px-2 py-1 rounded-lg">
-                    {member.position || 'DISCIPULO'}
+                  <span className="text-[10px] font-bold text-foreground/80 bg-white/5 px-2 py-1 rounded-lg uppercase tracking-tight">
+                    {(member.category || 'DISCIPULO').replace(/_/g, ' ')}
+                  </span>
+                </td>
+                <td className="px-6 py-4">
+                  <span className="text-[10px] font-medium text-foreground/80 bg-white/5 px-2 py-1 rounded-lg uppercase tracking-tight">
+                    {(member.position || 'MIEMBRO').replace(/_/g, ' ')}
                   </span>
                 </td>
                 <td className="px-6 py-4">
@@ -117,26 +132,22 @@ export default async function MembersPage() {
                 <td className="px-6 py-4">
                   <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-tighter ${
                     member.status === 'ACTIVE' ? 'bg-emerald-400/10 text-emerald-400' : 
+                    member.status === 'EXONERATED' ? 'bg-blue-400/10 text-blue-400' :
                     'bg-slate-400/10 text-slate-400'
                   }`}>
-                    {member.status === 'ACTIVE' ? 'Activo' : 'Inactivo'}
+                    {member.status === 'ACTIVE' ? 'Activo' : 
+                     member.status === 'EXONERATED' ? 'Exonerado' : 'Inactivo'}
                   </span>
                 </td>
                 <td className="px-6 py-4 text-sm text-muted-foreground">
                   {new Date(member.entryDate).toLocaleDateString('es-UY')}
                 </td>
                 <td className="px-6 py-4 text-sm">
-                  <div className="flex gap-2">
-                    <button className="p-2 hover:bg-white/10 rounded-lg transition-colors text-muted-foreground hover:text-primary" title="Generar QR">
-                      <QrCode className="w-4 h-4" />
-                    </button>
-                    <button className="p-2 hover:bg-white/10 rounded-lg transition-colors text-muted-foreground hover:text-foreground" title="Ver Perfil">
-                      <ExternalLink className="w-4 h-4" />
-                    </button>
-                    <button className="p-2 hover:bg-white/10 rounded-lg transition-colors text-muted-foreground hover:text-foreground" title="Opciones">
-                      <MoreVertical className="w-4 h-4" />
-                    </button>
-                  </div>
+                  <MemberActionsClient 
+                    member={member} 
+                    currentUserRole={role} 
+                    currentUserPosition={currentUserPosition} 
+                  />
                 </td>
               </tr>
             ))}

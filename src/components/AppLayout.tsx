@@ -23,9 +23,10 @@ export default function AppLayout({ children, role }: { children: React.ReactNod
     }
   }, []);
 
-  // No mostrar el layout en la página de login
-  if (pathname === "/") {
-    return <>{children}</>;
+  // No mostrar el layout completo en la página de login o perfiles públicos de miembros
+  const isMemberProfile = pathname.startsWith("/members/") && pathname !== "/members";
+  if (pathname === "/" || isMemberProfile) {
+    return <div className="min-h-screen bg-[#030712]">{children}</div>;
   }
 
   return (

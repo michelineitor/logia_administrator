@@ -59,11 +59,17 @@ export default function ProfileClient({ initialData, userId }: any) {
             <div>
               <h3 className="text-xl font-bold">{fullName || username}</h3>
               <div className="flex items-center gap-2">
+              <div className="flex flex-col gap-1">
                 <p className="text-sm text-primary uppercase font-bold tracking-widest">{getRoleLabel(user.role)}</p>
-                {member?.memberNumber && (
-                   <span className="text-[10px] bg-white/10 px-2 py-0.5 rounded text-white/70 font-mono tracking-widest">Nº {member.memberNumber}</span>
-                )}
-              </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded border border-primary/20 font-bold uppercase tracking-widest">
+                    {(member?.category || 'DISCIPULO').replace(/_/g, ' ')}
+                  </span>
+                  {member?.memberNumber && (
+                     <span className="text-[10px] bg-white/10 px-2 py-0.5 rounded text-white/70 font-mono tracking-widest">Nº {member.memberNumber}</span>
+                  )}
+                </div>
+              </div>              </div>
             </div>
           </div>
 
