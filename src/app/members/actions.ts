@@ -63,7 +63,9 @@ export async function createMember(formData: FormData) {
       let role: any = 'MEMBER';
       if (position.includes('TESORERO')) role = 'TESORERO';
       if (position === 'LUMINAR') role = 'LUMINAR';
+      if (position === 'SECRETARIO_ACTAS') role = 'SECRETARIO_ACTAS';
       if (position === 'ADMIN' as any) role = 'ADMIN';
+
 
       const user = await (prisma.user as any).create({
         data: {

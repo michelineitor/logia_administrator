@@ -20,7 +20,13 @@ export default async function MembersPage() {
   const session = await getServerSession(authOptions);
   if (!session?.user) redirect('/');
   const role = (session.user as any).role;
-  if (role === 'MEMBER' || role === 'GUEST') redirect('/dashboard');
+  if (role === 'MEMBER' || role === 'GUEST') {
+    // Check if they are already SECRETARIO_ACTAS which should have access
+    if (role !== 'SECRETARIO_ACTAS' as any) {
+      redirect('/dashboard');
+    }
+  }
+
 
   const currentUser = await prisma.user.findUnique({
     where: { id: (session.user as any).id },

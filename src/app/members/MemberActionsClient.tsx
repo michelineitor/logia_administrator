@@ -64,7 +64,9 @@ export default function MemberActionsClient({
 
   const isAdmin = currentUserRole === 'ADMIN';
   const isDignity = ['LUMINAR', 'SECRETARIO_ACTAS', 'VICE_SECRETARIO'].includes(currentUserPosition || '');
-  const canModify = isAdmin || isDignity;
+  const isHighRole = ['LUMINAR', 'SECRETARIO_ACTAS', 'TESORERO'].includes(currentUserRole || '');
+  const canModify = isAdmin || isDignity || isHighRole;
+
 
   const handleDelete = async () => {
     if (!confirm(`¿Estás seguro de que deseas eliminar permanentemente a ${member.fullName}?`)) return;

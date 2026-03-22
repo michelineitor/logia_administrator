@@ -22,6 +22,10 @@ export async function updateConfig(formData: FormData) {
     const monthlyFeeCurrency = (formData.get("monthlyFeeCurrency") as Currency) || 'UYU';
     const telegramBotToken = formData.get("telegramBotToken") as string;
     const telegramChatId = formData.get("telegramChatId") as string;
+    const meetingDay = formData.get("meetingDay") as string;
+    const meetingTime = formData.get("meetingTime") as string;
+    const holidays = formData.get("holidays") as string;
+    const extraData = formData.get("extraData") as string;
 
     await (prisma.config as any).upsert({
       where: { id: 'system-config' },
@@ -31,7 +35,11 @@ export async function updateConfig(formData: FormData) {
         monthlyFeeAmount,
         monthlyFeeCurrency,
         telegramBotToken,
-        telegramChatId
+        telegramChatId,
+        meetingDay,
+        meetingTime,
+        holidays,
+        extraData
       },
       create: {
         id: 'system-config',
@@ -40,7 +48,11 @@ export async function updateConfig(formData: FormData) {
         monthlyFeeAmount,
         monthlyFeeCurrency,
         telegramBotToken,
-        telegramChatId
+        telegramChatId,
+        meetingDay,
+        meetingTime,
+        holidays,
+        extraData
       }
     });
 

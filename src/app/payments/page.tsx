@@ -3,6 +3,7 @@ import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { getPayments } from "./actions";
 import { getMembers } from "@/app/members/actions";
+import { getConfig } from "../settings/actions";
 import PaymentsClient from "./PaymentsClient";
 
 export const dynamic = 'force-dynamic';
@@ -15,14 +16,13 @@ export default async function PaymentsPage() {
 
   const payments = await getPayments();
   const members = await getMembers();
+  const config = await getConfig();
 
-  // Filter out inactive members for the dropdown, mostly, but we can pass all so old payments still show their names if needed.
-  // The client component can handle it.
-  
   return (
     <PaymentsClient 
       payments={payments} 
       members={members.filter((m: any) => m.status === 'ACTIVE')} 
+      config={config}
       isAdmin={isAdmin} 
     />
   );

@@ -4,13 +4,15 @@ import { useState } from 'react';
 import { CreditCard, Download, Send, Search, Calendar, Plus, MoreVertical, X, Ban, Loader2 } from 'lucide-react';
 import { createPayment, updatePaymentStatus } from './actions';
 
-export default function PaymentsClient({ payments, members, isAdmin }: { payments: any[], members: any[], isAdmin: boolean }) {
+export default function PaymentsClient({ payments, members, config, isAdmin }: { payments: any[], members: any[], config: any, isAdmin: boolean }) {
   const [searchName, setSearchName] = useState('');
   const [searchNumber, setSearchNumber] = useState('');
   const [searchMonth, setSearchMonth] = useState('');
   const [searchYear, setSearchYear] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // ... (rest of the component, updating the form below) ...
 
   const filteredPayments = payments.filter(p => {
     const matchName = !searchName || p.member?.fullName?.toLowerCase().includes(searchName.toLowerCase());
@@ -199,11 +201,11 @@ export default function PaymentsClient({ payments, members, isAdmin }: { payment
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-sm text-muted-foreground">Monto</label>
-                  <input type="number" name="amount" required step="0.01" className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 focus:outline-none focus:border-primary/50" />
+                  <input type="number" name="amount" required step="0.01" defaultValue={config?.monthlyFeeAmount || 500} className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 focus:outline-none focus:border-primary/50" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm text-muted-foreground">Moneda</label>
-                  <select name="currency" className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 focus:outline-none focus:border-primary/50 text-foreground">
+                  <select name="currency" defaultValue={config?.monthlyFeeCurrency || 'UYU'} className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 focus:outline-none focus:border-primary/50 text-foreground">
                     <option value="UYU" className="bg-black text-foreground">UYU ($)</option>
                     <option value="USD" className="bg-black text-foreground">USD (U$S)</option>
                   </select>

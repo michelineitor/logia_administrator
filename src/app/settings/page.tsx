@@ -108,6 +108,60 @@ export default async function SettingsPage() {
             GESTIONAR ROLES
           </Link>
         </div>
+
+        {/* Lodge Info Config */}
+        <div className="glass p-8 rounded-3xl border border-white/5 space-y-6 md:col-span-2">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-amber-400/10 rounded-lg text-amber-400">
+              <Settings className="w-5 h-5" />
+            </div>
+            <h3 className="font-bold">Información de la Logia</h3>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <div className="space-y-1">
+                <label className="text-xs text-muted-foreground uppercase font-bold tracking-widest">Día de Sesión</label>
+                <select name="meetingDay" defaultValue={config.meetingDay || ''} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none text-foreground color-scheme-dark">
+                  <option value="" className="bg-black">Seleccionar día...</option>
+                  <option value="Lunes" className="bg-black">Lunes</option>
+                  <option value="Martes" className="bg-black">Martes</option>
+                  <option value="Miércoles" className="bg-black">Miércoles</option>
+                  <option value="Jueves" className="bg-black">Jueves</option>
+                  <option value="Viernes" className="bg-black">Viernes</option>
+                  <option value="Sábado" className="bg-black">Sábado</option>
+                  <option value="Domingo" className="bg-black">Domingo</option>
+                </select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs text-muted-foreground uppercase font-bold tracking-widest">Hora de Sesión</label>
+                <input type="time" name="meetingTime" defaultValue={config.meetingTime || ''} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary/50 text-foreground color-scheme-dark" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs text-muted-foreground uppercase font-bold tracking-widest">Feriados y Días Libres</label>
+                <textarea 
+                  name="holidays" 
+                  defaultValue={config.holidays || ''} 
+                  placeholder="Ej: 2024-12-25 (Navidad), 2025-01-01 (Año Nuevo)"
+                  rows={3}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary/50" 
+                />
+                <p className="text-[10px] text-muted-foreground">Indica las fechas en las que no habrá actividad.</p>
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground uppercase font-bold tracking-widest">Otros Datos Útiles</label>
+              <textarea 
+                name="extraData" 
+                defaultValue={config.extraData || ''} 
+                placeholder="Dirección, datos de contacto, enlaces importantes, etc."
+                rows={10}
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary/50" 
+              />
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="flex justify-end pt-4">

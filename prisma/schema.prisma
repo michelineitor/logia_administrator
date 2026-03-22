@@ -157,6 +157,10 @@ model Config {
   monthlyFeeCurrency Currency @default(UYU)
   telegramBotToken   String?
   telegramChatId     String?
+  meetingDay         String?
+  meetingTime        String?
+  holidays           String?  @db.Text
+  extraData          String?  @db.Text
 }
 
 model CashCount {
@@ -193,9 +197,11 @@ enum Role {
   TESORERO
   VICE_TESORERO
   LUMINAR
+  SECRETARIO_ACTAS
   MEMBER
   GUEST
 }
+
 
 enum MemberCategory {
   DISCIPULO

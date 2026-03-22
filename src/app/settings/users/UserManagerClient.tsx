@@ -143,9 +143,11 @@ export default function UserManagerClient({ initialUsers }: { initialUsers: any[
                 <select name="role" required className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-primary/50 text-white">
                   <option value="USER">Usuario (Sin accesos especiales)</option>
                   <option value="LUMINAR">Luminar</option>
+                  <option value="SECRETARIO_ACTAS">Secretario de Actas</option>
                   <option value="VICE_TESORERO">Vice Tesorero</option>
                   <option value="TESORERO">Tesorero</option>
                   <option value="ADMIN">Administrador</option>
+
                 </select>
               </div>
 

@@ -26,7 +26,9 @@ export default function MemberFormClient({
   // Permission check for status modification
   const isAdmin = currentUserRole === 'ADMIN';
   const isDignity = ['LUMINAR', 'SECRETARIO_ACTAS', 'VICE_SECRETARIO'].includes(currentUserPosition || '');
-  const canModifyStatus = isAdmin || isDignity;
+  const isHighRole = ['LUMINAR', 'SECRETARIO_ACTAS', 'TESORERO'].includes(currentUserRole || '');
+  const canModifyStatus = isAdmin || isDignity || isHighRole;
+
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

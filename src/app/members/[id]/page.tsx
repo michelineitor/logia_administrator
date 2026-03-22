@@ -1,4 +1,5 @@
 import { getMemberById } from "../actions";
+import { getConfig } from "../../settings/actions";
 import { notFound } from "next/navigation";
 import { User, Phone, Mail, Award, Calendar, CreditCard, Info, MapPin } from "lucide-react";
 
@@ -6,6 +7,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function MemberProfilePage({ params }: { params: { id: string } }) {
   const member = await getMemberById(params.id);
+  const config = await getConfig();
 
   if (!member) {
     notFound();
@@ -35,6 +37,49 @@ export default async function MemberProfilePage({ params }: { params: { id: stri
         <div className="glass p-8 rounded-[2rem] border border-white/5 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -mr-32 -mt-32" />
           
+          {/* Debt Status Overlay */}
+          {member.status === 'ACTIVE' && (
+            <div className="absolute top-8 right-8 flex flex-col items-end gap-1 z-20">
+              <div className={`px-4 py-1.5 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] border shadow-2xl backdrop-blur-xl ${
+                (() => {
+                  const entryDate = new Date(member.entryDate);
+                  const now = new Date();
+                  let monthsExpected = (now.getFullYear() - entryDate.getFullYear()) * 12 + (now.getMonth() - entryDate.getMonth()) + 1;
+                  if (monthsExpected < 1) monthsExpected = 1;
+                  const paymentsMade = member.payments?.length || 0;
+                  const debtCount = monthsExpected - paymentsMade;
+                  return debtCount > 0 
+                    ? 'text-rose-400 bg-rose-400/10 border-rose-400/20 shadow-rose-500/20' 
+                    : 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20 shadow-emerald-500/20';
+                })()
+              }`}>
+                {(() => {
+                  const entryDate = new Date(member.entryDate);
+                  const now = new Date();
+                  let monthsExpected = (now.getFullYear() - entryDate.getFullYear()) * 12 + (now.getMonth() - entryDate.getMonth()) + 1;
+                  if (monthsExpected < 1) monthsExpected = 1;
+                  const paymentsMade = member.payments?.length || 0;
+                  const debtCount = monthsExpected - paymentsMade;
+                  return debtCount > 0 ? 'Con Deuda' : 'Al Día';
+                })()}
+              </div>
+              {(() => {
+                const entryDate = new Date(member.entryDate);
+                const now = new Date();
+                let monthsExpected = (now.getFullYear() - entryDate.getFullYear()) * 12 + (now.getMonth() - entryDate.getMonth()) + 1;
+                if (monthsExpected < 1) monthsExpected = 1;
+                const paymentsMade = member.payments?.length || 0;
+                const debtCount = monthsExpected - paymentsMade;
+                if (debtCount > 0) {
+                  const totalDebt = debtCount * (config?.monthlyFeeAmount || 500);
+                  const currency = config?.monthlyFeeCurrency === 'USD' ? 'USD $' : '$';
+                  return <p className="text-[10px] font-bold text-rose-400/60 uppercase tracking-widest mr-1">Pendiente: {debtCount} cuotas ({currency}{totalDebt})</p>
+                }
+                return null;
+              })()}
+            </div>
+          )}
+
           <div className="flex flex-col md:flex-row items-center gap-8 relative z-10">
             <div className="relative group">
               {member.imageUrl ? (

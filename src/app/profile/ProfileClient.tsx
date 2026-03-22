@@ -175,7 +175,9 @@ export default function ProfileClient({ initialData, userId }: any) {
     switch(r) {
       case 'ADMIN': return 'Administrador';
       case 'LUMINAR': return 'Luminar';
+      case 'SECRETARIO_ACTAS': return 'Secretario de Actas';
       case 'TESORERO': return 'Tesorero';
+
       case 'VICE_TESORERO': return 'Vice-Tesorero';
       case 'MEMBER': return 'Miembro Pleno';
       case 'GUEST': return 'Invitado / Visitante';

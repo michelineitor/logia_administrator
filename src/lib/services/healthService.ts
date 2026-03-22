@@ -40,7 +40,7 @@ export async function getFinancialHealth() {
   }
 
   // 2. Verificar Morosidad (3+ meses)
-  const config = await prisma.config.findFirst() || { monthsForDebt: 3, monthlyFeeAmount: 500 };
+  const config = await prisma.config.findUnique({ where: { id: 'system-config' } }) || { monthsForDebt: 3, monthlyFeeAmount: 500 };
   const members = await prisma.member.findMany({
     where: { status: 'ACTIVE' },
     include: { payments: true }
