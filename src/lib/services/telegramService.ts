@@ -7,7 +7,7 @@ export async function sendTelegramNotification(message: string, chatId: string, 
       const formData = new FormData();
       formData.append('chat_id', chatId);
       formData.append('caption', message);
-      const blob = new Blob([file], { type: 'application/pdf' });
+      const blob = new Blob([new Uint8Array(file)], { type: 'application/pdf' });
       formData.append('document', blob, 'recibo.pdf');
 
       await fetch(`${baseUrl}/sendDocument`, {
