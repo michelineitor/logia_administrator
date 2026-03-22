@@ -22,7 +22,7 @@ export default async function PaymentsPage() {
   return (
     <PaymentsClient 
       payments={payments} 
-      members={members.filter(m => m.status === 'ACTIVE')} 
+      members={members.filter((m: any) => m.status === 'ACTIVE')} 
       isAdmin={isAdmin} 
     />
   );
