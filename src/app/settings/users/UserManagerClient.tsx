@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, X, User as UserIcon } from 'lucide-react';
+import { Plus, X, User as UserIcon, Loader2 } from 'lucide-react';
 import { createUser } from './actions';
 
 export default function UserManagerClient({ initialUsers }: { initialUsers: any[] }) {
@@ -160,9 +160,14 @@ export default function UserManagerClient({ initialUsers }: { initialUsers: any[
                 <button 
                   type="submit" 
                   disabled={isSubmitting}
-                  className="btn-primary text-sm px-4 py-2 disabled:opacity-50"
+                  className="btn-primary text-sm px-6 py-2 disabled:opacity-50 flex items-center justify-center gap-2 min-w-[140px]"
                 >
-                  {isSubmitting ? 'Guardando...' : 'Crear Usuario'}
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Guardando...
+                    </>
+                  ) : 'Crear Usuario'}
                 </button>
               </div>
             </form>

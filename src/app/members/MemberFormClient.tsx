@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { UserPlus, X, Plus } from 'lucide-react';
+import { UserPlus, X, Plus, Loader2 } from 'lucide-react';
 import { createMember } from './actions';
 
 export default function MemberFormClient() {
@@ -68,6 +68,7 @@ export default function MemberFormClient() {
     { value: 'GUARDA_TEMPLO_INTERIOR', label: 'Guarda-Templo-Interior' },
     { value: 'GUARDA_TEMPLO_EXTERIOR', label: 'Guarda-Templo-Exterior' },
   ];
+  const [createAccount, setCreateAccount] = useState(true);
 
   return (
     <div className="relative inline-block">
@@ -205,6 +206,49 @@ export default function MemberFormClient() {
                 </div>
               </div>
 
+                <div className="space-y-4 pt-6 border-t border-white/5">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="text-sm font-bold tracking-widest text-primary uppercase">Acceso al Sistema</h4>
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Crear credenciales para que el hermano entre al dashboard</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        name="createAccount" 
+                        className="sr-only peer" 
+                        checked={createAccount}
+                        onChange={(e) => setCreateAccount(e.target.checked)}
+                      />
+                      <div className="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                    </label>
+                  </div>
+
+                  <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 transition-all duration-300 ${createAccount ? 'opacity-100' : 'opacity-40 cursor-not-allowed'}`}>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Nombre de Usuario</label>
+                      <input 
+                        type="text" 
+                        name="username"
+                        disabled={!createAccount}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-primary/50 disabled:bg-transparent disabled:opacity-50"
+                        placeholder="ej. juanp"
+                        required={createAccount}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Contraseña Temporal</label>
+                      <input 
+                        type="password" 
+                        name="password"
+                        disabled={!createAccount}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-primary/50 disabled:bg-transparent disabled:opacity50"
+                        placeholder="••••••••"
+                        required={createAccount}
+                      />
+                    </div>
+                  </div>
+                </div>
               <div className="mt-8 flex gap-4 justify-end pt-6 border-t border-white/5">
                 <button 
                   type="button" 
@@ -216,9 +260,14 @@ export default function MemberFormClient() {
                 <button 
                   type="submit" 
                   disabled={isSubmitting}
-                  className="btn-primary min-w-[140px] shadow-lg shadow-primary/20 disabled:opacity-50"
+                  className="btn-primary min-w-[140px] shadow-lg shadow-primary/20 disabled:opacity-50 flex items-center justify-center gap-2"
                 >
-                  {isSubmitting ? 'Procesando...' : 'Guardar Hermano'}
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Guardando...
+                    </>
+                  ) : 'Guardar Hermano'}
                 </button>
               </div>
             </form>

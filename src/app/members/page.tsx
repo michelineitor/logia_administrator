@@ -3,7 +3,8 @@ import {
   Search,
   MoreVertical,
   QrCode,
-  ExternalLink
+  ExternalLink,
+  Shield
 } from 'lucide-react';
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -75,7 +76,15 @@ export default async function MembersPage() {
                       </div>
                     )}
                     <div>
-                      <p className="text-sm font-medium">{member.fullName}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-medium">{member.fullName}</p>
+                        {member.user && (
+                          <div className="flex items-center gap-1">
+                            <Shield className="w-3 h-3 text-primary animate-pulse" />
+                            <span className="text-[8px] text-primary/50 font-bold uppercase">Online</span>
+                          </div>
+                        )}
+                      </div>
                       {member.memberNumber && (
                         <p className="text-[10px] font-bold text-primary uppercase tracking-widest">Nº {member.memberNumber}</p>
                       )}

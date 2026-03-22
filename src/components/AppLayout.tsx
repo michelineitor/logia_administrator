@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Sidebar from "./Sidebar";
 import { Menu } from "lucide-react";
 import { usePathname } from "next/navigation";
@@ -9,17 +9,40 @@ export default function AppLayout({ children, role }: { children: React.ReactNod
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const pathname = usePathname();
 
+  // Cerrar el menú principal en móviles al cambiar de página
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      setIsSidebarOpen(false);
+    }
+  }, [pathname]);
+
+  // Asegurar que inicie cerrado en móviles
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      setIsSidebarOpen(false);
+    }
+  }, []);
+
   // No mostrar el layout en la página de login
   if (pathname === "/") {
     return <>{children}</>;
   }
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="min-h-screen bg-background flex relative">
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} role={role} />
+      
+      {/* Overlay responsivo para cerrar haciendo clic afuera */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden transition-opacity cursor-pointer"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
       <main 
-        className={`flex-1 transition-all duration-300 min-h-screen p-8 ${
-          isSidebarOpen ? 'ml-[260px]' : 'ml-0'
+        className={`flex-1 transition-all duration-300 min-h-screen p-4 sm:p-8 min-w-0 ${
+          isSidebarOpen ? 'md:ml-[260px]' : 'ml-0'
         }`}
       >
         <div className="mb-6 flex items-center gap-4">

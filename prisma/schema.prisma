@@ -23,6 +23,7 @@ model User {
   member        Member?     @relation("MemberUser")
   paymentsReg   Payment[]   @relation("RegisteredPayments")
   sessions      Session[]
+  registeredSessions LodgeSession[] @relation("RegisteredSessions")
 }
 
 model Account {
@@ -94,6 +95,8 @@ model Income {
   imageProofUrl  String?
   registeredById String?
   registeredBy   User?         @relation("RegisteredIncomes", fields: [registeredById], references: [id])
+  sessionId      String?
+  session        LodgeSession? @relation(fields: [sessionId], references: [id])
 }
 
 model Expense {
@@ -106,7 +109,9 @@ model Expense {
   comment        String?
   imageProofUrl  String?
   registeredById String?
-  registeredBy   User?           @relation("RegisteredExpenses", fields: [registeredById], references: [id])
+  registeredBy   User?          @relation("RegisteredExpenses", fields: [registeredById], references: [id])
+  sessionId      String?
+  session        LodgeSession?  @relation(fields: [sessionId], references: [id])
 }
 
 model MonthlyBalance {
@@ -155,6 +160,16 @@ model CashCount {
   registeredById  String?
   observations    String?
   registeredBy    User?    @relation("RegisteredCashCounts", fields: [registeredById], references: [id])
+}
+
+model LodgeSession {
+  id             String    @id @default(cuid())
+  date           DateTime  @default(now())
+  observations   String?
+  incomes        Income[]
+  expenses       Expense[]
+  registeredById String?
+  registeredBy   User?     @relation("RegisteredSessions", fields: [registeredById], references: [id])
 }
 
 enum Role {

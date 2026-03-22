@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react';
-import { User, Phone, Mail, Shield, AlertCircle, CheckCircle, Save, CreditCard } from 'lucide-react';
+import { User, Phone, Mail, Shield, AlertCircle, CheckCircle, Save, CreditCard, Loader2 } from 'lucide-react';
 import { updateProfileData } from './actions';
 
 export default function ProfileClient({ initialData, userId }: any) {
@@ -110,8 +110,8 @@ export default function ProfileClient({ initialData, userId }: any) {
           </div>
 
           <div className="pt-6 border-t border-white/5 flex justify-end">
-            <button type="submit" disabled={loading} className="btn-primary hover:scale-105 active:scale-95 transition-transform flex items-center gap-2 px-8">
-              <Save className="w-4 h-4" />
+            <button type="submit" disabled={loading} className="btn-primary hover:scale-105 active:scale-95 transition-transform flex items-center justify-center gap-2 px-8 min-w-[180px]">
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
               {loading ? 'Guardando...' : 'Guardar Cambios'}
             </button>
           </div>

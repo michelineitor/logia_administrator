@@ -1,17 +1,25 @@
 'use client';
 
 import { useState } from 'react';
-import { CreditCard, Download, Send, Search, Calendar, Plus, MoreVertical, X, Ban } from 'lucide-react';
+import { CreditCard, Download, Send, Search, Calendar, Plus, MoreVertical, X, Ban, Loader2 } from 'lucide-react';
 import { createPayment, updatePaymentStatus } from './actions';
 
 export default function PaymentsClient({ payments, members, isAdmin }: { payments: any[], members: any[], isAdmin: boolean }) {
-  const [search, setSearch] = useState('');
+  const [searchName, setSearchName] = useState('');
+  const [searchNumber, setSearchNumber] = useState('');
+  const [searchMonth, setSearchMonth] = useState('');
+  const [searchYear, setSearchYear] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const filteredPayments = payments.filter(p => 
-    p.member?.fullName?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredPayments = payments.filter(p => {
+    const matchName = !searchName || p.member?.fullName?.toLowerCase().includes(searchName.toLowerCase());
+    const matchNumber = !searchNumber || p.member?.memberNumber?.toLowerCase().includes(searchNumber.toLowerCase());
+    const matchMonth = !searchMonth || p.monthPaid.toString() === searchMonth;
+    const matchYear = !searchYear || p.yearPaid.toString() === searchYear;
+
+    return matchName && matchNumber && matchMonth && matchYear;
+  });
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -38,35 +46,70 @@ export default function PaymentsClient({ payments, members, isAdmin }: { payment
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h2 className="text-xl font-bold flex items-center gap-2">
           <CreditCard className="w-5 h-5 text-primary" />
           Historial de Pagos
         </h2>
         <button 
           onClick={() => setShowForm(true)}
-          className="btn-primary flex items-center gap-2 text-sm"
+          className="btn-primary w-full sm:w-auto flex items-center justify-center gap-2 text-sm"
         >
           <Plus className="w-4 h-4" />
           Registrar Pago Nuevo
         </button>
       </div>
 
-      <div className="glass p-4 rounded-xl border border-white/5 flex gap-4">
-        <div className="relative flex-1">
+      <div className="glass p-4 rounded-xl border border-white/5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="relative w-full">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <input 
             type="text" 
-            placeholder="Buscar por miembro..." 
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Nombre de miembro..." 
+            value={searchName}
+            onChange={(e) => setSearchName(e.target.value)}
             className="w-full bg-white/5 border border-white/10 rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:border-primary/50" 
+          />
+        </div>
+
+        <div className="relative w-full">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <input 
+            type="text" 
+            placeholder="Nº de registro..." 
+            value={searchNumber}
+            onChange={(e) => setSearchNumber(e.target.value)}
+            className="w-full bg-white/5 border border-white/10 rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:border-primary/50" 
+          />
+        </div>
+
+        <div className="w-full">
+          <select 
+            value={searchMonth} 
+            onChange={(e) => setSearchMonth(e.target.value)}
+            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-primary/50 text-foreground"
+          >
+            <option value="" className="bg-slate-900">Todos los meses</option>
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(m => (
+              <option key={m} value={m.toString()} className="bg-slate-900">{getMonthName(m)}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="w-full">
+          <input 
+            type="number" 
+            placeholder="Año..." 
+            value={searchYear}
+            onChange={(e) => setSearchYear(e.target.value)}
+            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-primary/50" 
           />
         </div>
       </div>
 
       <div className="glass rounded-2xl border border-white/5 overflow-hidden">
-        <table className="w-full text-left border-collapse">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse min-w-[800px]">
           <thead>
             <tr className="border-b border-white/5 bg-white/[0.02]">
               <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">Miembro</th>
@@ -100,10 +143,10 @@ export default function PaymentsClient({ payments, members, isAdmin }: { payment
                       <button 
                         onClick={() => handleSoftDelete(p.id)}
                         disabled={loading}
-                        className="p-2 hover:bg-rose-500/10 rounded-lg transition-colors text-muted-foreground hover:text-rose-400" 
+                        className="p-2 hover:bg-rose-500/10 rounded-lg transition-colors text-muted-foreground hover:text-rose-400 disabled:opacity-50" 
                         title="Cancelar Pago"
                       >
-                        <Ban className="w-4 h-4" />
+                        {loading ? <Loader2 className="w-4 h-4 animate-spin text-rose-400" /> : <Ban className="w-4 h-4" />}
                       </button>
                     )}
                   </div>
@@ -117,6 +160,7 @@ export default function PaymentsClient({ payments, members, isAdmin }: { payment
             )}
           </tbody>
         </table>
+        </div>
       </div>
 
       {showForm && (
@@ -200,8 +244,13 @@ export default function PaymentsClient({ payments, members, isAdmin }: { payment
                 <button type="button" onClick={() => setShowForm(false)} className="flex-1 px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
                   Cancelar
                 </button>
-                <button type="submit" disabled={loading} className="flex-1 btn-primary opacity-100 disabled:opacity-50">
-                  {loading ? 'Guardando...' : 'Guardar Pago'}
+                <button type="submit" disabled={loading} className="flex-1 btn-primary opacity-100 disabled:opacity-50 flex items-center justify-center gap-2">
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Guardando...
+                    </>
+                  ) : 'Guardar Pago'}
                 </button>
               </div>
             </form>

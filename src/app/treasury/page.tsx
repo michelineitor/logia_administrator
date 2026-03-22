@@ -24,9 +24,11 @@ export default async function TreasuryPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <h2 className="text-xl font-bold">Gestión de Tesorería</h2>
-        <TransactionFormsClient />
+        <div className="w-full md:w-auto">
+          <TransactionFormsClient />
+        </div>
       </div>
 
       {/* Summary Cards */}
@@ -63,7 +65,8 @@ export default async function TreasuryPage() {
           </button>
         </div>
         
-        <table className="w-full text-left border-collapse">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse min-w-[800px]">
           <thead>
             <tr className="border-b border-white/5 bg-white/[0.02]">
               <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">Tipo</th>
@@ -103,6 +106,7 @@ export default async function TreasuryPage() {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );

@@ -3,37 +3,64 @@
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 import { Status } from "@prisma/client"
+import bcrypt from "bcryptjs"
 
 export async function getMembers() {
-  return await prisma.member.findMany({
+  return await (prisma.member as any).findMany({
+    include: { user: true },
     orderBy: { fullName: 'asc' }
   })
 }
 
 export async function createMember(formData: FormData) {
   try {
-    const fullName = formData.get("fullName") as string
-    const email = formData.get("email") as string
-    const phone = formData.get("phone") as string
-    const memberNumber = formData.get("memberNumber") as string
-    const position = formData.get("position") as any
-    const imageUrl = formData.get("imageUrl") as string
-    
-    if (!fullName) return { error: "El nombre completo es requerido" }
+    const fullName = formData.get('fullName') as string;
+    const memberNumber = formData.get('memberNumber') as string;
+    const phone = formData.get('phone') as string;
+    const email = formData.get('email') as string;
+    const position = formData.get('position') as string;
+    const imageUrl = formData.get('imageUrl') as string;
+    const createAccount = formData.get('createAccount') === 'on';
+    const username = formData.get('username') as string;
+    const password = formData.get('password') as string;
+
+    let userId: string | undefined;
+
+    if (createAccount && username && password) {
+      // HASH THE PASSWORD
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      // Map position to Role
+      let role: any = 'MEMBER';
+      if (position.includes('TESORERO')) role = 'TESORERO';
+      if (position === 'LUMINAR') role = 'LUMINAR';
+      if (position === 'ADMIN') role = 'ADMIN';
+
+      const user = await (prisma.user as any).create({
+        data: {
+          username,
+          password: hashedPassword,
+          name: fullName,
+          email: email || null,
+          role: role
+        }
+      });
+      userId = user.id;
+    }
 
     const member = await (prisma.member as any).create({
       data: {
         fullName,
-        memberNumber: memberNumber || null,
-        email: email || null,
-        phone: phone || null,
-        position: position || "DISCIPULO",
+        memberNumber,
+        phone,
+        email,
+        position,
         imageUrl: imageUrl || null,
-        status: "ACTIVE"
+        entryDate: new Date(),
+        status: 'ACTIVE',
+        userId: userId || null
       }
-    })
-    
-    revalidatePath('/members')
+    });revalidatePath('/members')
     return { success: true, member }
   } catch (err: any) {
     if (err.code === 'P2002') return { error: "Ese número de miembro ya está en uso." }

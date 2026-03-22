@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Calculator, Check, AlertCircle, Save } from 'lucide-react';
+import { Calculator, Check, AlertCircle, Save, Loader2 } from 'lucide-react';
 import { registerCashCount, getExpectedBalance } from './actions';
 
 export default function BalanceClient({ expectedData: initialExpected, history, userId, isAdmin }: any) {
@@ -165,7 +165,7 @@ export default function BalanceClient({ expectedData: initialExpected, history, 
           </div>
 
           <button type="submit" disabled={loading || !!dateError} className="btn-primary w-full flex items-center justify-center gap-2">
-            <Save className="w-4 h-4" />
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             {loading ? 'Registrando...' : 'Registrar Arqueo (Nuevo Punto de Partida)'}
           </button>
         </form>

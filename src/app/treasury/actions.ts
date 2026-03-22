@@ -111,3 +111,70 @@ export async function createExpense(formData: FormData) {
     return { error: e.message || "Error al guardar el gasto" };
   }
 }
+export async function createLodgeSession(formData: FormData) {
+  try {
+    const photoUrl = await handleFileUpload(formData);
+    const parsedDate = parseDate(formData);
+    const observations = formData.get("observations") as string;
+
+    const sessionIncomes = [
+      { 
+        amount: formData.get("sacoAmount") ? parseFloat(formData.get("sacoAmount") as string) : 0, 
+        currency: (formData.get("sacoCurrency") as Currency) || "UYU",
+        type: "COLECTAS_SACO_BENEFICO" as IncomeType,
+        comment: "Colecta de Saco Benéfico"
+      },
+      { 
+        amount: formData.get("donativoAmount") ? parseFloat(formData.get("donativoAmount") as string) : 0, 
+        currency: (formData.get("donativoCurrency") as Currency) || "UYU",
+        type: "DONATIVOS_RECIBIDOS" as IncomeType,
+        comment: "Donativos Recibidos en Sesión"
+      },
+      { 
+        amount: formData.get("iniciacionAmount") ? parseFloat(formData.get("iniciacionAmount") as string) : 0, 
+        currency: (formData.get("iniciacionCurrency") as Currency) || "UYU",
+        type: "INICIACIONES_AFILIACIONES" as IncomeType,
+        comment: "Iniciaciones/Afiliaciones en Sesión"
+      },
+      { 
+        amount: formData.get("otrosAmount") ? parseFloat(formData.get("otrosAmount") as string) : 0, 
+        currency: (formData.get("otrosCurrency") as Currency) || "UYU",
+        type: "INGRESOS_EVENTUALES" as IncomeType,
+        comment: (formData.get("otrosComment") as string) || "Otros ingresos de sesión"
+      }
+    ].filter(item => item.amount > 0);
+
+    if (sessionIncomes.length === 0) {
+      throw new Error("Debe ingresar al menos un monto para registrar la sesión");
+    }
+
+    await prisma.$transaction(async (tx) => {
+      const session = await tx.lodgeSession.create({
+        data: {
+          date: parsedDate,
+          observations: observations || null,
+        }
+      });
+
+      for (const inc of sessionIncomes) {
+        await tx.income.create({
+          data: {
+            date: parsedDate,
+            amount: inc.amount,
+            currency: inc.currency,
+            type: inc.type,
+            method: "CASH", // Typically sessions are in cash
+            comment: inc.comment,
+            imageProofUrl: photoUrl,
+            sessionId: session.id,
+          }
+        });
+      }
+    });
+
+    revalidatePath('/treasury');
+    return { success: true };
+  } catch(e: any) {
+    return { error: e.message || "Error al registrar la sesión" };
+  }
+}
