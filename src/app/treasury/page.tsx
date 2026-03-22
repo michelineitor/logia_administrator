@@ -8,6 +8,8 @@ import {
 import { getTransactions } from './actions';
 import TransactionFormsClient from './TransactionFormsClient';
 
+export const dynamic = 'force-dynamic';
+
 export default async function TreasuryPage() {
   const transactions = await getTransactions();
 

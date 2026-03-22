@@ -28,6 +28,8 @@ function timeAgo(date: Date) {
   return "Hace instantes";
 }
 
+export const dynamic = 'force-dynamic';
+
 export default async function DashboardPage() {
   const currentDate = new Date();
   const currentMonth = currentDate.getMonth();
