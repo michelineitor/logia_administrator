@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import bcrypt from "bcryptjs";
 
 export async function getProfileData(userId: string) {
   const user = await (prisma.user as any).findUnique({
@@ -67,6 +68,35 @@ export async function updateProfileData(formData: FormData, userId: string) {
     }
     
     revalidatePath('/profile');
+    return { success: true };
+  } catch (e: any) {
+    return { error: e.message };
+  }
+}
+
+export async function changePassword(formData: FormData, userId: string) {
+  try {
+    const currentPassword = formData.get("currentPassword") as string;
+    const newPassword = formData.get("newPassword") as string;
+
+    const user = await (prisma.user as any).findUnique({ where: { id: userId } });
+    if (!user || !user.password) return { error: "Usuario no encontrado" };
+
+    const isValid = await bcrypt.compare(currentPassword, user.password);
+    if (!isValid) return { error: "La contraseña actual es incorrecta" };
+
+    // Validation rules
+    if (newPassword.length < 8) return { error: "La nueva contraseña debe tener al menos 8 caracteres" };
+    if (!/[A-Z]/.test(newPassword)) return { error: "La nueva contraseña debe tener al menos una mayúscula" };
+    if (!/[0-9]/.test(newPassword)) return { error: "La nueva contraseña debe tener al menos un número" };
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(newPassword)) return { error: "La nueva contraseña debe tener al menos un símbolo" };
+
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+    await (prisma.user as any).update({
+      where: { id: userId },
+      data: { password: hashedPassword }
+    });
+
     return { success: true };
   } catch (e: any) {
     return { error: e.message };

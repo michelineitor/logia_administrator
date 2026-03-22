@@ -1,8 +1,148 @@
 'use client'
 
 import { useState } from 'react';
-import { User, Phone, Mail, Shield, AlertCircle, CheckCircle, Save, CreditCard, Loader2 } from 'lucide-react';
-import { updateProfileData } from './actions';
+import { User, Phone, Mail, Shield, AlertCircle, CheckCircle, Save, CreditCard, Loader2, Lock, Eye, EyeOff } from 'lucide-react';
+import { updateProfileData, changePassword } from './actions';
+
+// ... (previous functions if any) ...
+
+function PasswordChangeCard({ userId }: { userId: string }) {
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showCurrent, setShowCurrent] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState({ type: '', text: '' });
+
+  const validate = () => {
+    if (newPassword.length < 8) return "La contraseña debe tener al menos 8 caracteres.";
+    if (!/[A-Z]/.test(newPassword)) return "Debe incluir al menos una mayúscula.";
+    if (!/[0-9]/.test(newPassword)) return "Debe incluir al menos un número.";
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(newPassword)) return "Debe incluir al menos un símbolo (!@#$...).";
+    if (newPassword !== confirmPassword) return "Las contraseñas no coinciden.";
+    return null;
+  };
+
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const error = validate();
+    if (error) {
+      setMessage({ type: 'error', text: error });
+      return;
+    }
+
+    setLoading(true);
+    const fd = new FormData();
+    fd.append("currentPassword", currentPassword);
+    fd.append("newPassword", newPassword);
+    
+    const res = await changePassword(fd, userId);
+    setLoading(false);
+
+    if (res.error) {
+      setMessage({ type: 'error', text: res.error });
+    } else {
+      setMessage({ type: 'success', text: "¡Contraseña actualizada con éxito!" });
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    }
+  };
+
+  const requirements = [
+    { label: "8+ caracteres", met: newPassword.length >= 8 },
+    { label: "Mayúscula", met: /[A-Z]/.test(newPassword) },
+    { label: "Número", met: /[0-9]/.test(newPassword) },
+    { label: "Símbolo", met: /[!@#$%^&*(),.?":{}|<>]/.test(newPassword) }
+  ];
+
+  return (
+    <form onSubmit={handlePasswordChange} className="glass p-8 rounded-3xl border border-white/5 space-y-6">
+      <div className="flex items-center gap-3">
+        <div className="p-2 rounded-xl bg-orange-500/10 text-orange-400">
+          <Lock className="w-5 h-5" />
+        </div>
+        <h3 className="text-lg font-bold">Cambiar Contraseña</h3>
+      </div>
+
+      {message.text && (
+        <div className={`p-4 rounded-xl text-sm flex items-center gap-3 border ${
+          message.type === 'success' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+        }`}>
+          {message.type === 'success' ? <CheckCircle className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
+          {message.text}
+        </div>
+      )}
+
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Contraseña Actual</label>
+          <div className="relative">
+             <input 
+               type={showCurrent ? "text" : "password"} 
+               value={currentPassword} 
+               onChange={e => setCurrentPassword(e.target.value)} 
+               required 
+               className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary/50 transition-all font-mono"
+               placeholder="••••••••"
+             />
+             <button type="button" onClick={() => setShowCurrent(!showCurrent)} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white transition-colors">
+               {showCurrent ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+             </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Nueva Contraseña</label>
+            <div className="relative">
+               <input 
+                 type={showNew ? "text" : "password"} 
+                 value={newPassword} 
+                 onChange={e => setNewPassword(e.target.value)} 
+                 required 
+                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary/50 transition-all font-mono"
+                 placeholder="••••••••"
+               />
+               <button type="button" onClick={() => setShowNew(!showNew)} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white transition-colors">
+                 {showNew ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+               </button>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Confirmar Nueva Contraseña</label>
+            <input 
+              type={showNew ? "text" : "password"} 
+              value={confirmPassword} 
+              onChange={e => setConfirmPassword(e.target.value)} 
+              required 
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary/50 transition-all font-mono"
+              placeholder="••••••••"
+            />
+          </div>
+        </div>
+
+        <div className="flex flex-wrap gap-2 pt-2">
+          {requirements.map(req => (
+            <span key={req.label} className={`text-[10px] px-2 py-1 rounded-md border transition-all ${
+              req.met ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-white/5 text-muted-foreground border-white/10'
+            }`}>
+              {req.met ? '✓' : '•'} {req.label}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <div className="pt-4 flex justify-end">
+        <button type="submit" disabled={loading} className="w-full md:w-auto px-10 py-3 rounded-2xl bg-primary text-primary-foreground text-xs font-bold uppercase tracking-[0.2em] shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all flex items-center justify-center gap-2">
+          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+          {loading ? 'Actualizando...' : 'Cambiar Contraseña'}
+        </button>
+      </div>
+    </form>
+  );
+}
 
 export default function ProfileClient({ initialData, userId }: any) {
   const { user, status, debtCount, debtAmount, fee, currency } = initialData;
@@ -122,6 +262,9 @@ export default function ProfileClient({ initialData, userId }: any) {
             </button>
           </div>
         </form>
+
+        {/* Cambiar Contraseña */}
+        <PasswordChangeCard userId={userId} />
       </div>
 
       {/* ESTADO FINANCIERO Y PAGOS */}

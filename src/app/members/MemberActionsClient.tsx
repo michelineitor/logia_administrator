@@ -1,10 +1,32 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { QrCode, ExternalLink, MoreVertical, Edit, Trash2, Loader2, X } from 'lucide-react';
 import { updateMember, deleteMember, updateMemberStatus } from './actions';
 import { useRouter } from 'next/navigation';
+
+const POSITIONS = [
+  { value: 'MIEMBRO', label: 'Miembro' },
+  { value: 'LUMINAR', label: 'Luminar' },
+  { value: 'VICE_LUMINAR', label: 'Vice-Luminar' },
+  { value: 'SECRETARIO_ACTAS', label: 'Secretario de Actas' },
+  { value: 'VICE_SECRETARIO', label: 'Vice-Secretario' },
+  { value: 'TESORERO', label: 'Tesorero' },
+  { value: 'VICE_TESORERO', label: 'Vice-Tesorero' },
+  { value: 'GUARDA_TEMPLO_INTERIOR', label: 'Guarda-Templo-Interior' },
+  { value: 'GUARDA_TEMPLO_EXTERIOR', label: 'Guarda-Templo-Exterior' },
+  { value: 'PATRIARCA', label: 'Patriarca' },
+  { value: 'LPI', label: 'LPI' },
+];
+
+const CATEGORIES = [
+  { value: 'DISCIPULO', label: 'Discípulo' },
+  { value: 'DISCIPULO_HONOR', label: 'Discípulo de Honor' },
+  { value: 'CABALLERO_LUZ', label: 'Caballero de la Luz' },
+  { value: 'PASADO_JEFE', label: 'Pasado Jefe' },
+  { value: 'LUMINAR_PASADO', label: 'Luminar Pasado' },
+];
 
 export default function MemberActionsClient({ 
   member, 
@@ -19,9 +41,22 @@ export default function MemberActionsClient({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  
+  const toggleMenu = () => {
+    if (!isMenuOpen && menuTriggerRef.current) {
+      const rect = menuTriggerRef.current.getBoundingClientRect();
+      setMenuPosition({
+        top: rect.bottom,
+        right: window.innerWidth - rect.right
+      });
+    }
+    setIsMenuOpen(!isMenuOpen);
+  };
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [menuPosition, setMenuPosition] = useState({ top: 0, right: 0 });
+  const menuTriggerRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -139,20 +174,35 @@ export default function MemberActionsClient({
                </div>
              </div>
 
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+               <div className="space-y-2">
+                 <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-1">Categoría / Rango</label>
+                 <select name="category" defaultValue={member.category} className="input-field-custom h-12 bg-[#111827]">
+                   {CATEGORIES.map(c => <option key={c.value} value={c.value} className="bg-gray-900">{c.label}</option>)}
+                 </select>
+               </div>
+               <div className="space-y-2">
+                 <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-1">Cargo / Posición</label>
+                 <select name="position" defaultValue={member.position} className="input-field-custom h-12 bg-[#111827]">
+                    {POSITIONS.map(p => <option key={p.value} value={p.value} className="bg-gray-900">{p.label}</option>)}
+                 </select>
+               </div>
+             </div>
+
              <div className="space-y-2">
                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-1">Datos Relevantes / Observaciones</label>
                <textarea 
                 name="relevantData" 
                 defaultValue={member.relevantData} 
                 rows={4}
-                className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-sm focus:outline-none focus:border-primary/50 transition-all resize-none min-h-[120px]"
+                className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-sm focus:outline-none focus:border-primary/50 transition-all resize-none min-h-[120px] text-white"
                 placeholder="Información adicional relevante del hermano..."
               />
              </div>
 
              <div className="flex gap-4 justify-end pt-8 border-t border-white/5">
-              <button type="button" onClick={() => setIsEditModalOpen(false)} className="px-8 py-3 rounded-2xl text-xs font-bold text-muted-foreground uppercase tracking-widest hover:bg-white/5 transition-all">Cancelar</button>
-              <button type="submit" disabled={isUpdating} className="px-8 py-3 rounded-2xl bg-primary text-primary-foreground text-xs font-bold uppercase tracking-[0.2em] hover:shadow-lg hover:shadow-primary/20 transition-all flex items-center justify-center gap-2">
+              <button type="button" onClick={() => setIsEditModalOpen(false)} className="px-8 py-3 rounded-2xl text-xs font-bold text-muted-foreground uppercase tracking-widest hover:bg-white/5 transition-all font-bold">Cancelar</button>
+              <button type="submit" disabled={isUpdating} className="px-8 py-3 rounded-2xl bg-primary text-primary-foreground text-xs font-bold uppercase tracking-[0.2em] hover:shadow-lg hover:shadow-primary/20 transition-all flex items-center justify-center gap-2 font-bold">
                 {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Guardar Cambios'}
               </button>
              </div>
@@ -184,17 +234,24 @@ export default function MemberActionsClient({
 
       <div className="relative">
         <button 
-          onClick={() => setIsMenuOpen(!isMenuOpen)}
+          ref={menuTriggerRef}
+          onClick={toggleMenu}
           className={`p-2 hover:bg-white/10 rounded-lg transition-colors ${isMenuOpen ? 'bg-white/10 text-primary' : 'text-muted-foreground'}`}
           title="Opciones"
         >
           <MoreVertical className="w-4 h-4" />
         </button>
 
-        {isMenuOpen && (
+        {mounted && isMenuOpen && createPortal(
           <>
-            <div className="fixed inset-0 z-40" onClick={() => setIsMenuOpen(false)} />
-            <div className="absolute right-0 mt-2 w-48 glass border border-white/10 rounded-2xl shadow-2xl z-50 p-2 animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="fixed inset-0 z-[99998]" onClick={() => setIsMenuOpen(false)} />
+            <div 
+              className="fixed glass border border-white/10 rounded-2xl shadow-2xl z-[99999] p-2 animate-in fade-in slide-in-from-top-2 duration-200 w-48"
+              style={{ 
+                top: `${menuPosition.top + 8}px`, 
+                right: `${menuPosition.right}px` 
+              }}
+            >
               <button 
                 onClick={() => { setIsEditModalOpen(true); setIsMenuOpen(false); }}
                 className="w-full flex items-center gap-3 px-4 py-2 text-sm hover:bg-white/5 rounded-xl transition-colors"
@@ -233,7 +290,8 @@ export default function MemberActionsClient({
                 </>
               )}
             </div>
-          </>
+          </>,
+          document.body
         )}
       </div>
 
