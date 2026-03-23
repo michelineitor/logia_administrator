@@ -3,7 +3,8 @@ import {
   Shield, 
   Database,
   MessageSquare,
-  DollarSign
+  DollarSign,
+  AlertCircle
 } from 'lucide-react';
 import Link from 'next/link';
 import { getConfig, updateConfig } from './actions';
@@ -106,6 +107,20 @@ export default async function SettingsPage() {
           <p className="text-sm text-foreground/70">Gestiona quién tiene acceso a los diferentes módulos de la plataforma central.</p>
           <Link href="/settings/users" className="block text-center w-full py-3 bg-white/5 border border-white/10 rounded-xl text-xs font-bold hover:bg-white/10 transition-all">
             GESTIONAR ROLES
+          </Link>
+        </div>
+
+        {/* Alerts Config */}
+        <div className="glass p-8 rounded-3xl border border-white/5 space-y-6">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-amber-400/10 rounded-lg text-amber-400">
+              <AlertCircle className="w-5 h-5" />
+            </div>
+            <h3 className="font-bold">Alertas y Notificaciones</h3>
+          </div>
+          <p className="text-sm text-foreground/70">Configura las reglas dinámicas y umbrales para las alertas financieras y operativas.</p>
+          <Link href="/settings/alerts" className="block text-center w-full py-3 bg-white/5 border border-white/10 rounded-xl text-xs font-bold hover:bg-white/10 transition-all">
+            CONFIGURAR ALERTAS
           </Link>
         </div>
 

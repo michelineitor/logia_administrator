@@ -6,12 +6,19 @@ import {
   AlertCircle,
   Wallet,
   Landmark,
-  Calendar
+  Calendar,
+  HeartHandshake,
+  Lightbulb
 } from 'lucide-react';
 import { prisma } from "@/lib/prisma";
 import DashboardCharts from './DashboardCharts';
 import FinancialAlertsClient from './FinancialAlertsClient';
 import { getFinancialHealth, getConsolidatedBalances } from '@/lib/services/healthService';
+import SimpleIndicators from './SimpleIndicators';
+import IncomesSection from './IncomesSection';
+import ExpensesSection from './ExpensesSection';
+import ProjectionsSection from './ProjectionsSection';
+import Link from 'next/link';
 
 function timeAgo(date: Date) {
   const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
@@ -34,26 +41,13 @@ export default async function DashboardPage() {
   const currentDate = new Date();
   const currentMonth = currentDate.getMonth();
 
-  const activeMembersCount = await prisma.member.count({ where: { status: 'ACTIVE' } });
-  
-  // Use the new consolidated balance service
-  const { 
-    cashUYU, 
-    cashUSD, 
-    bankUYU, 
-    bankUSD, 
-    lastArqueoDate 
-  } = await getConsolidatedBalances();
-
-  // Get Health Alerts
+  const { cashUYU, cashUSD, bankUYU, bankUSD, lastArqueoDate } = await getConsolidatedBalances();
   const { alerts } = await getFinancialHealth();
 
-  // Manual fetches for charts/stats (simplified for now)
   const incomes = await prisma.income.findMany();
   const payments = await prisma.payment.findMany();
   const expenses = await prisma.expense.findMany();
 
-  // Load recent activity dynamically
   const [paymentsData, incomesData, expensesData, cashCountsData] = await Promise.all([
     prisma.payment.findMany({ include: { member: true }, orderBy: { date: 'desc' }, take: 5 }),
     prisma.income.findMany({ orderBy: { date: 'desc' }, take: 5 }),
@@ -68,7 +62,8 @@ export default async function DashboardPage() {
       date: p.date,
       title: `Pago registrado - ${p.member?.fullName || 'Miembro desconocido'}`,
       amount: p.amount,
-      currency: p.currency
+      currency: p.currency,
+      url: p.receiptUrl
     })),
     ...incomesData.map((i: any) => ({
       id: `i-${i.id}`,
@@ -76,7 +71,8 @@ export default async function DashboardPage() {
       date: i.date,
       title: `Ingreso - ${i.type.replace(/_/g, ' ')}`,
       amount: i.amount,
-      currency: i.currency
+      currency: i.currency,
+      url: i.imageProofUrl
     })),
     ...expensesData.map((e: any) => ({
       id: `e-${e.id}`,
@@ -84,7 +80,8 @@ export default async function DashboardPage() {
       date: e.date,
       title: `Gasto - ${e.category.replace(/_/g, ' ')}`,
       amount: e.amount,
-      currency: e.currency
+      currency: e.currency,
+      url: e.imageProofUrl
     })),
     ...cashCountsData.map((c: any) => ({
       id: `c-${c.id}`,
@@ -96,16 +93,6 @@ export default async function DashboardPage() {
     }))
   ].sort((a, b) => b.date.getTime() - a.date.getTime()).slice(0, 5);
 
-  const incomesThisMonth = incomes
-    .filter(i => i.date.getMonth() === currentMonth && i.currency === 'UYU')
-    .reduce((a, b) => a + b.amount, 0) + 
-    payments.filter(p => p.date.getMonth() === currentMonth && p.currency === 'UYU')
-    .reduce((a, b) => a + b.amount, 0);
-    
-  const expensesThisMonth = expenses
-    .filter(e => e.date.getMonth() === currentMonth && e.currency === 'UYU')
-    .reduce((a, b) => a + b.amount, 0);
-
   const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
   const chartData = monthNames.map((name, index) => ({
     month: name,
@@ -114,34 +101,23 @@ export default async function DashboardPage() {
     gastos: expenses.filter(e => e.date.getMonth() === index && e.currency === 'UYU').reduce((a, b) => a + b.amount, 0),
   })).slice(0, currentMonth + 1);
 
-  const balances = [
-    { label: 'Efectivo UYU', value: cashUYU, currency: 'UYU', icon: Wallet },
-    { label: 'Efectivo USD', value: cashUSD, currency: 'USD', icon: Wallet },
-    { label: 'Caja Banco UYU', value: bankUYU, currency: 'UYU', icon: Landmark },
-    { label: 'Caja Banco USD', value: bankUSD, currency: 'USD', icon: Landmark },
-  ];
-
-  const stats = [
-    { label: 'Miembros Activos', value: activeMembersCount.toString(), icon: Users, color: 'text-blue-400', bg: 'bg-blue-400/10' },
-    { label: 'Ingresos Mensuales', value: new Intl.NumberFormat('es-UY', { style: 'currency', currency: 'UYU' }).format(incomesThisMonth), icon: TrendingUp, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
-    { label: 'Gastos Mensuales', value: new Intl.NumberFormat('es-UY', { style: 'currency', currency: 'UYU' }).format(expensesThisMonth), icon: TrendingDown, color: 'text-rose-400', bg: 'bg-rose-400/10' },
-    { label: 'Déficit Mensual', value: new Intl.NumberFormat('es-UY', { style: 'currency', currency: 'UYU' }).format(incomesThisMonth - expensesThisMonth), icon: DollarSign, color: 'text-amber-400', bg: 'bg-amber-400/10' },
-  ];
-
   return (
     <div className="space-y-8">
-      {/* Financial Health Alerts Section */}
+      {/* 1. Alertas */}
       {alerts.length > 0 && (
         <div className="space-y-4">
            <h3 className="text-sm font-bold tracking-widest text-white uppercase flex items-center gap-2">
             <AlertCircle className="w-4 h-4 text-rose-500" />
-            Salud del Tesoro (Alertas)
+            Alertas y Avisos
           </h3>
           <FinancialAlertsClient alerts={alerts.map(a => ({ ...a, date: a.date.toISOString() }))} />
         </div>
       )}
 
-      {/* Balances Availability Grouped */}
+      {/* 2. Indicadores Simples */}
+      <SimpleIndicators />
+
+      {/* 3. Disponibilidad de Fondos (Arqueo) */}
       <div>
         <div className="flex justify-between items-end mb-4">
           <h3 className="text-sm font-bold tracking-widest text-primary uppercase flex items-center gap-2">
@@ -213,25 +189,16 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat) => (
-          <div key={stat.label} className="glass p-6 rounded-2xl border border-white/5 card-hover transition-all duration-300">
-            <div className="flex items-center justify-between mb-4">
-              <div className={`p-3 rounded-xl ${stat.bg}`}>
-                <stat.icon className={`w-6 h-6 ${stat.color}`} />
-              </div>
-            </div>
-            <p className="text-muted-foreground text-xs uppercase tracking-widest mb-1">{stat.label}</p>
-            <h3 className="text-2xl font-bold">{stat.value}</h3>
-          </div>
-        ))}
+      {/* 4. Ingresos y Egresos Desk */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <IncomesSection />
+        <ExpensesSection />
       </div>
 
-      {/* Main Content Area */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Chart Area */}
-        <div className="lg:col-span-2 glass p-8 rounded-2xl border border-white/5 min-h-[400px]">
+      {/* 5. Proyecciones y Gráficas */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <ProjectionsSection />
+        <div className="glass p-8 rounded-2xl border border-white/5">
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-lg font-bold">Resumen de Ingresos vs Gastos</h3>
             <div className="flex gap-2">
@@ -240,9 +207,11 @@ export default async function DashboardPage() {
           </div>
           <DashboardCharts data={chartData} />
         </div>
+      </div>
 
-        {/* Recent Activity */}
-        <div className="glass p-8 rounded-2xl border border-white/5 relative">
+      {/* 6. Actividad y Cultura */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 glass p-8 rounded-2xl border border-white/5 relative">
           <h3 className="text-lg font-bold mb-6">Actividad Reciente</h3>
           <div className="space-y-6">
             {recentActivity.length === 0 ? (
@@ -256,7 +225,14 @@ export default async function DashboardPage() {
                   {activity.type === 'PAYMENT' ? 'P' : activity.type === 'INCOME' ? 'I' : activity.type === 'EXPENSE' ? 'G' : 'A'}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{activity.title}</p>
+                  <div className="flex justify-between">
+                    <p className="text-sm font-medium truncate">{activity.title}</p>
+                    {activity.url && (
+                      <Link href={activity.url} target="_blank" className="text-[10px] text-blue-400 hover:underline">
+                        Ver recibo
+                      </Link>
+                    )}
+                  </div>
                   <div className="flex justify-between items-center mt-1">
                     <p className="text-xs text-muted-foreground">{timeAgo(activity.date)}</p>
                     <p className={`text-xs font-bold ${
@@ -270,6 +246,33 @@ export default async function DashboardPage() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+        
+        {/* Cultura Box */}
+        <div className="glass p-8 rounded-2xl border border-primary/20 bg-primary/5 flex flex-col justify-center space-y-8 text-center relative overflow-hidden group">
+          <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+            <HeartHandshake className="w-32 h-32 text-primary" />
+          </div>
+          
+          <div className="relative z-10">
+            <h3 className="text-2xl font-black italic gold-gradient mb-2">El tesoro es de todos</h3>
+            <p className="text-sm text-foreground/80 leading-relaxed">
+              La transparencia y el orden financiero garantizan la sostenibilidad operativa de nuestro Taller.
+            </p>
+          </div>
+
+          <div className="relative z-10 bg-background/50 p-4 rounded-xl border border-white/5 text-left">
+            <div className="flex items-center gap-2 mb-2">
+              <Lightbulb className="w-4 h-4 text-amber-400" />
+              <h4 className="font-bold text-sm">¿Tienes una propuesta?</h4>
+            </div>
+            <p className="text-xs text-muted-foreground mb-3">
+              Puedes presentar iniciativas para optimizar gastos o generar nuevos ingresos en las tenidas.
+            </p>
+            <Link href="/dashboard/proposals" className="w-full block text-center py-2 bg-white/5 hover:bg-white/10 rounded-lg text-xs font-bold transition-colors border border-white/10">
+              Ver Guía de Propuestas
+            </Link>
           </div>
         </div>
       </div>

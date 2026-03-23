@@ -9,7 +9,8 @@ import {
   Sun,
   Scale,
   Shield,
-  User as UserIcon
+  User as UserIcon,
+  AlertCircle
 } from 'lucide-react';
 
 const menuItems = [
@@ -19,6 +20,7 @@ const menuItems = [
   { icon: Wallet, label: 'Tesorería', href: '/treasury' },
   { icon: Scale, label: 'Arqueo de Caja', href: '/treasury/balance' },
   { icon: Shield, label: 'Usuarios', href: '/settings/users' },
+  { icon: AlertCircle, label: 'Alertas', href: '/settings/alerts' },
   { icon: Settings, label: 'Configuración', href: '/settings' },
   { icon: UserIcon, label: 'Mi Perfil', href: '/profile' }
 ];

@@ -8,22 +8,22 @@ datasource db {
 }
 
 model User {
-  id            String      @id @default(cuid())
-  username      String?     @unique
-  password      String?
-  name          String?
-  email         String?     @unique
-  emailVerified DateTime?
-  image         String?
-  role          Role        @default(MEMBER)
-  accounts      Account[]
-  cashCountsReg CashCount[] @relation("RegisteredCashCounts")
-  expensesReg   Expense[]   @relation("RegisteredExpenses")
-  incomesReg    Income[]    @relation("RegisteredIncomes")
-  member        Member?     @relation("MemberUser")
-  paymentsReg   Payment[]   @relation("RegisteredPayments")
-  sessions      Session[]
-  registeredSessions LodgeSession[] @relation("RegisteredSessions")
+  id                 String          @id @default(cuid())
+  username           String?         @unique
+  password           String?
+  name               String?
+  email              String?         @unique
+  emailVerified      DateTime?
+  image              String?
+  role               Role            @default(MEMBER)
+  accounts           Account[]
+  cashCountsReg      CashCount[]     @relation("RegisteredCashCounts")
+  expensesReg        Expense[]       @relation("RegisteredExpenses")
+  incomesReg         Income[]        @relation("RegisteredIncomes")
+  member             Member?         @relation("MemberUser")
+  paymentsReg        Payment[]       @relation("RegisteredPayments")
+  sessions           Session[]
+  registeredSessions LodgeSession[]  @relation("RegisteredSessions")
   memberHistories    MemberHistory[]
 }
 
@@ -54,34 +54,34 @@ model Session {
 }
 
 model Member {
-  id           String         @id @default(cuid())
-  memberNumber String?        @unique
+  id           String          @id @default(cuid())
+  memberNumber String?         @unique
   fullName     String
   phone        String?
   email        String?
-  position     MemberPosition @default(MIEMBRO)
-  category     MemberCategory @default(DISCIPULO)
+  position     MemberPosition  @default(MIEMBRO)
+  category     MemberCategory  @default(DISCIPULO)
   imageUrl     String?
-  status       Status         @default(ACTIVE)
-  entryDate    DateTime       @default(now())
+  status       Status          @default(ACTIVE)
+  entryDate    DateTime        @default(now())
   qrCodeUrl    String?
-  relevantData String?        @db.Text
-  userId       String?        @unique
-  user         User?          @relation("MemberUser", fields: [userId], references: [id])
+  relevantData String?         @db.Text
+  userId       String?         @unique
+  user         User?           @relation("MemberUser", fields: [userId], references: [id])
   payments     Payment[]
   history      MemberHistory[]
 }
 
 model MemberHistory {
-  id          String         @id @default(cuid())
+  id          String   @id @default(cuid())
   memberId    String
-  member      Member         @relation(fields: [memberId], references: [id], onDelete: Cascade)
-  field       String         // "status", "category", "position"
+  member      Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  field       String // "status", "category", "position"
   oldValue    String?
   newValue    String?
-  changeDate  DateTime       @default(now())
+  changeDate  DateTime @default(now())
   changedById String?
-  changedBy   User?          @relation(fields: [changedById], references: [id])
+  changedBy   User?    @relation(fields: [changedById], references: [id])
 }
 
 model Payment {
@@ -125,9 +125,9 @@ model Expense {
   comment        String?
   imageProofUrl  String?
   registeredById String?
-  registeredBy   User?          @relation("RegisteredExpenses", fields: [registeredById], references: [id])
+  registeredBy   User?           @relation("RegisteredExpenses", fields: [registeredById], references: [id])
   sessionId      String?
-  session        LodgeSession?  @relation(fields: [sessionId], references: [id])
+  session        LodgeSession?   @relation(fields: [sessionId], references: [id])
 }
 
 model MonthlyBalance {
@@ -201,7 +201,6 @@ enum Role {
   MEMBER
   GUEST
 }
-
 
 enum MemberCategory {
   DISCIPULO
@@ -284,4 +283,46 @@ enum ExpenseCategory {
   INMOBILIARIAS
   GASTOS_EVENTUALES
   GASTOS_TRAMITES
+}
+
+model AlertRule {
+  id          String        @id @default(cuid())
+  name        String
+  description String?
+  category    AlertCategory
+  severity    AlertSeverity
+  logic       Json
+  isActive    Boolean       @default(true)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+enum AlertCategory {
+  FINANCIAL
+  OPERATIONAL
+  GOVERNANCE
+}
+
+enum AlertSeverity {
+  INFO
+  WARNING
+  ERROR
+}
+
+model Proposal {
+  id          String         @id @default(cuid())
+  title       String
+  description String         @db.Text
+  category    String?
+  authorName  String?
+  status      ProposalStatus @default(PENDING)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
+
+enum ProposalStatus {
+  PENDING
+  REVIEWED
+  ACCEPTED
+  REJECTED
 }
