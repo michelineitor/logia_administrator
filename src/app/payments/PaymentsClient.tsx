@@ -11,6 +11,12 @@ export default function PaymentsClient({ payments, members, config, isAdmin }: {
   const [searchYear, setSearchYear] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(false);
+  
+  // Registration Form State
+  const [selectedMember, setSelectedMember] = useState<any>(null);
+  const [memberSearch, setMemberSearch] = useState('');
+  const [numCuotas, setNumCuotas] = useState(1);
+  const [showMemberResults, setShowMemberResults] = useState(false);
 
   // ... (rest of the component, updating the form below) ...
 
@@ -36,6 +42,46 @@ export default function PaymentsClient({ payments, members, config, isAdmin }: {
   const getMonthName = (month: number) => {
     const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
     return months[month - 1] || month;
+  };
+
+  const getNextMonths = (memberId: string, count: number) => {
+    const memberPayments = payments.filter(p => p.memberId === memberId && p.status !== 'CANCELADO');
+    let startMonth, startYear;
+
+    if (memberPayments.length > 0) {
+      // Find latest payment month/year
+      const latest = memberPayments.sort((a,b) => b.yearPaid - a.yearPaid || b.monthPaid - a.monthPaid)[0];
+      startMonth = latest.monthPaid + 1;
+      startYear = latest.yearPaid;
+      if (startMonth > 12) {
+        startMonth = 1;
+        startYear++;
+      }
+    } else {
+      const member = members.find(m => m.id === memberId);
+      // Default to Jan 1st 2026 if no entry date found or if it's older (as per user request)
+      const entryDate = member?.entryDate ? new Date(member.entryDate) : new Date('2026-01-01T12:00:00Z');
+      
+      const referenceDate = new Date('2026-01-01T00:00:00Z');
+      const finalEntryDate = entryDate < referenceDate ? referenceDate : entryDate;
+      
+      startMonth = finalEntryDate.getUTCMonth() + 1;
+      startYear = finalEntryDate.getUTCFullYear();
+    }
+
+    const monthsLine = [];
+    let currM = startMonth;
+    let currY = startYear;
+
+    for (let i = 0; i < count; i++) {
+      monthsLine.push({ month: currM, year: currY });
+      currM++;
+      if (currM > 12) {
+        currM = 1;
+        currY++;
+      }
+    }
+    return monthsLine;
   };
 
   async function handleSoftDelete(id: string) {
@@ -186,67 +232,129 @@ export default function PaymentsClient({ payments, members, config, isAdmin }: {
                 alert(res.error);
               } else {
                 setShowForm(false);
+                setSelectedMember(null);
+                setMemberSearch('');
+                setNumCuotas(1);
               }
             }} className="flex-1 overflow-y-auto space-y-4 pr-2">
-              <div className="space-y-2">
+              <div className="space-y-2 relative">
                 <label className="text-sm text-muted-foreground">Miembro</label>
-                <select name="memberId" required className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 focus:outline-none focus:border-primary/50 text-foreground">
-                  <option value="">Selecciona un miembro...</option>
-                  {members.map(m => (
-                    <option key={m.id} value={m.id} className="bg-black text-foreground">{m.fullName}</option>
-                  ))}
-                </select>
+                {!selectedMember ? (
+                  <div className="relative">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <input 
+                        type="text" 
+                        placeholder="Buscar por nombre o Nº..." 
+                        value={memberSearch}
+                        onChange={(e) => {
+                          setMemberSearch(e.target.value);
+                          setShowMemberResults(true);
+                        }}
+                        onFocus={() => setShowMemberResults(true)}
+                        className="w-full bg-white/5 border border-white/10 rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:border-primary/50 text-sm" 
+                      />
+                    </div>
+                    
+                    {showMemberResults && memberSearch.length > 0 && (
+                      <div className="absolute top-full left-0 right-0 mt-2 bg-slate-900 border border-white/10 rounded-xl shadow-2xl z-[60] max-h-60 overflow-y-auto">
+                        {members
+                          .filter(m => 
+                            m.fullName.toLowerCase().includes(memberSearch.toLowerCase()) || 
+                            m.memberNumber?.toLowerCase().includes(memberSearch.toLowerCase())
+                          )
+                          .map(m => (
+                            <div 
+                              key={m.id} 
+                              onClick={() => {
+                                setSelectedMember(m);
+                                setShowMemberResults(false);
+                              }}
+                              className="px-4 py-3 hover:bg-white/5 cursor-pointer border-b border-white/5 last:border-0"
+                            >
+                              <p className="text-sm font-bold">{m.fullName}</p>
+                              <p className="text-[10px] text-muted-foreground uppercase tracking-widest">{m.memberNumber || 'S/N'}</p>
+                            </div>
+                          ))
+                        }
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between bg-white/5 border border-primary/20 rounded-lg px-4 py-2 animate-in zoom-in-95 duration-200">
+                    <div>
+                      <p className="text-sm font-bold text-primary">{selectedMember.fullName}</p>
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-widest">{selectedMember.memberNumber || 'S/N'}</p>
+                    </div>
+                    <button 
+                      type="button"
+                      onClick={() => setSelectedMember(null)}
+                      className="text-muted-foreground hover:text-rose-400 transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                    <input type="hidden" name="memberId" value={selectedMember.id} />
+                  </div>
+                )}
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm text-muted-foreground">Monto</label>
-                  <input type="number" name="amount" required step="0.01" defaultValue={config?.monthlyFeeAmount || 500} className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 focus:outline-none focus:border-primary/50" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm text-muted-foreground">Moneda</label>
-                  <select name="currency" defaultValue={config?.monthlyFeeCurrency || 'UYU'} className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 focus:outline-none focus:border-primary/50 text-foreground">
-                    <option value="UYU" className="bg-black text-foreground">UYU ($)</option>
-                    <option value="USD" className="bg-black text-foreground">USD (U$S)</option>
-                  </select>
-                </div>
-              </div>
+              {selectedMember && (
+                <div className="animate-in fade-in slide-in-from-top-2 duration-300 space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-sm text-muted-foreground">Cantidad de Cuotas</label>
+                      <input 
+                        type="number" 
+                        name="numCuotas" 
+                        min="1" 
+                        required
+                        value={numCuotas}
+                        onChange={(e) => setNumCuotas(parseInt(e.target.value) || 1)}
+                        className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 focus:outline-none focus:border-primary/50" 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm text-muted-foreground">Monto Total</label>
+                      <div className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 font-bold text-emerald-400">
+                        {config?.monthlyFeeCurrency || 'UYU'} $ {numCuotas * (config?.monthlyFeeAmount || 500)}
+                        <input type="hidden" name="amount" value={numCuotas * (config?.monthlyFeeAmount || 500)} />
+                      </div>
+                    </div>
+                  </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm text-muted-foreground">Mes Pagado</label>
-                  <select name="monthPaid" required className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 focus:outline-none focus:border-primary/50 text-foreground" defaultValue={new Date().getMonth() + 1}>
-                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(m => (
-                      <option key={m} value={m} className="bg-black text-foreground">{getMonthName(m)}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm text-muted-foreground">Año Pagado</label>
-                  <input type="number" name="yearPaid" required defaultValue={new Date().getFullYear()} className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 focus:outline-none focus:border-primary/50" />
-                </div>
-              </div>
+                  <div className="p-4 rounded-xl bg-primary/5 border border-primary/10">
+                    <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-2">Meses a cubrir</p>
+                    <div className="flex flex-wrap gap-2">
+                      {getNextMonths(selectedMember.id, numCuotas).map((m, i) => (
+                        <span key={i} className="px-2 py-1 bg-white/10 rounded-md text-[10px] font-bold text-white">
+                          {getMonthName(m.month)} {m.year}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
 
-              <div className="space-y-2">
-                <label className="text-sm text-muted-foreground">Método de Pago</label>
-                <select name="method" className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 focus:outline-none focus:border-primary/50 text-foreground">
-                  <option value="CASH" className="bg-black text-foreground">Efectivo</option>
-                  <option value="BANK_TRANSFER" className="bg-black text-foreground">Transferencia Bancaria</option>
-                  <option value="PENDING_DEPOSIT" className="bg-black text-foreground">Buzón / Depósito Pendiente</option>
-                  <option value="OTHER" className="bg-black text-foreground">Otro</option>
-                </select>
-              </div>
+                  <div className="space-y-2">
+                    <label className="text-sm text-muted-foreground">Método de Pago</label>
+                    <select name="method" className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 focus:outline-none focus:border-primary/50 text-foreground">
+                      <option value="CASH" className="bg-black">Efectivo</option>
+                      <option value="BANK_TRANSFER" className="bg-black">Transferencia Bancaria</option>
+                      <option value="PENDING_DEPOSIT" className="bg-black">Buzón / Depósito Pendiente</option>
+                      <option value="OTHER" className="bg-black">Otro</option>
+                    </select>
+                  </div>
 
-              <div className="space-y-2">
-                <label className="text-sm text-muted-foreground">Fecha de Registro</label>
-                <input type="date" name="date" required defaultValue={new Date().toISOString().split('T')[0]} className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 focus:outline-none focus:border-primary/50 color-scheme-dark" />
-              </div>
+                  <div className="space-y-2">
+                    <label className="text-sm text-muted-foreground">Fecha de Registro</label>
+                    <input type="date" name="date" required defaultValue={new Date().toISOString().split('T')[0]} className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 focus:outline-none focus:border-primary/50 color-scheme-dark" />
+                  </div>
+                </div>
+              )}
 
               <div className="pt-4 flex gap-3">
                 <button type="button" onClick={() => setShowForm(false)} className="flex-1 px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
                   Cancelar
                 </button>
-                <button type="submit" disabled={loading} className="flex-1 btn-primary opacity-100 disabled:opacity-50 flex items-center justify-center gap-2">
+                <button type="submit" disabled={loading || !selectedMember} className="flex-1 btn-primary opacity-100 disabled:opacity-50 flex items-center justify-center gap-2">
                   {loading ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />

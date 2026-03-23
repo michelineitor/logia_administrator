@@ -15,37 +15,75 @@ export async function getPayments() {
 export async function createPayment(formData: FormData) {
   try {
     const memberId = formData.get("memberId") as string
-    const amount = parseFloat(formData.get("amount") as string)
+    const totalAmount = parseFloat(formData.get("amount") as string)
+    const numCuotas = parseInt(formData.get("numCuotas") as string) || 1
     const currency = (formData.get("currency") as Currency) || "UYU"
     
     const dateStr = formData.get("date") as string
     const parsedDate = dateStr ? new Date(`${dateStr}T12:00:00Z`) : new Date()
 
-    const monthPaid = parseInt(formData.get("monthPaid") as string)
-    const yearPaid = parseInt(formData.get("yearPaid") as string)
     const method = (formData.get("method") as PaymentMethod) || "CASH"
 
-    if (!memberId || isNaN(amount) || isNaN(monthPaid) || isNaN(yearPaid)) {
+    if (!memberId || isNaN(totalAmount) || isNaN(numCuotas)) {
         return { error: "Campos requeridos faltantes o inválidos" }
     }
 
-    const payment = await prisma.payment.create({
-      data: {
-        memberId,
-        amount,
-        currency,
-        date: parsedDate,
-        monthPaid,
-        yearPaid,
-        method,
-        // @ts-ignore
-        status: "COMPLETADO"
-      }
+    // Find the last payment to determine the next months to pay
+    const lastPayment = await prisma.payment.findFirst({
+      where: { memberId, status: { not: "CANCELADO" as any } },
+      orderBy: [
+        { yearPaid: 'desc' },
+        { monthPaid: 'desc' }
+      ]
     })
+
+    let startMonth, startYear;
+    if (lastPayment) {
+      startMonth = lastPayment.monthPaid + 1;
+      startYear = lastPayment.yearPaid;
+      if (startMonth > 12) {
+        startMonth = 1;
+        startYear++;
+      }
+    } else {
+      const member = await prisma.member.findUnique({ where: { id: memberId } });
+      const entryDate = member?.entryDate ? new Date(member.entryDate) : new Date('2026-01-01T12:00:00Z');
+      
+      const referenceDate = new Date('2026-01-01T00:00:00Z');
+      const finalEntryDate = entryDate < referenceDate ? referenceDate : entryDate;
+
+      startMonth = finalEntryDate.getUTCMonth() + 1;
+      startYear = finalEntryDate.getUTCFullYear();
+    }
+
+    const amountPerCuota = totalAmount / numCuotas;
+
+    // Create each payment record
+    for (let i = 0; i < numCuotas; i++) {
+      await prisma.payment.create({
+        data: {
+          memberId,
+          amount: amountPerCuota,
+          currency,
+          date: parsedDate,
+          monthPaid: startMonth,
+          yearPaid: startYear,
+          method,
+          // @ts-ignore
+          status: "COMPLETADO"
+        }
+      });
+
+      startMonth++;
+      if (startMonth > 12) {
+        startMonth = 1;
+        startYear++;
+      }
+    }
     
     revalidatePath('/payments')
     revalidatePath('/dashboard')
-    return { success: true, payment }
+    return { success: true }
   } catch (err: any) {
     return { error: err.message || "Error al registrar el pago" }
   }

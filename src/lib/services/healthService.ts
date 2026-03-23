@@ -41,27 +41,29 @@ export async function getFinancialHealth() {
 
   // 2. Verificar Morosidad (3+ meses)
   const config = await prisma.config.findUnique({ where: { id: 'system-config' } }) || { monthsForDebt: 3, monthlyFeeAmount: 500 };
+  const { calculateMemberDebt } = await import("./debtService");
   const members = await prisma.member.findMany({
     where: { status: 'ACTIVE' },
     include: { payments: true }
   });
 
+  let morososCount = 0;
   for (const m of members) {
-    // Calculamos meses de deuda (simplificado: meses desde ingreso - meses pagados)
-    const entryDate = new Date(m.entryDate);
-    const monthsSinceEntry = (now.getFullYear() - entryDate.getFullYear()) * 12 + (now.getMonth() - entryDate.getMonth()) + 1;
-    const monthsPaid = m.payments.length;
-    const debt = monthsSinceEntry - monthsPaid;
+    const { debtCount } = calculateMemberDebt(m, config);
 
-    if (debt >= config.monthsForDebt) {
-      alerts.push({
-        id: `debt-${m.id}`,
-        type: 'warning',
-        message: `El hermano ${m.fullName} adeuda ${debt} meses de cuotas.`,
-        category: 'morosidad',
-        date: now
-      });
+    if (debtCount >= (config as any).monthsForDebt) {
+      morososCount++;
     }
+  }
+
+  if (morososCount > 0) {
+    alerts.push({
+      id: 'summary-morosos',
+      type: 'error',
+      message: `Existen ${morososCount} miembros con ${(config as any).monthsForDebt} o más meses de deuda.`,
+      category: 'morosidad',
+      date: now
+    });
   }
 
   // 3. Desviación de Media (Ingresos/Gastos)

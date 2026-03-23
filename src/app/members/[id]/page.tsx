@@ -1,5 +1,6 @@
 import { getMemberById } from "../actions";
 import { getConfig } from "../../settings/actions";
+import { calculateMemberDebt } from "../../../lib/services/debtService";
 import { notFound } from "next/navigation";
 import { User, Phone, Mail, Award, Calendar, CreditCard, Info, MapPin } from "lucide-react";
 
@@ -42,38 +43,22 @@ export default async function MemberProfilePage({ params }: { params: { id: stri
             <div className="absolute top-8 right-8 flex flex-col items-end gap-1 z-20">
               <div className={`px-4 py-1.5 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] border shadow-2xl backdrop-blur-xl ${
                 (() => {
-                  const entryDate = new Date(member.entryDate);
-                  const now = new Date();
-                  let monthsExpected = (now.getFullYear() - entryDate.getFullYear()) * 12 + (now.getMonth() - entryDate.getMonth()) + 1;
-                  if (monthsExpected < 1) monthsExpected = 1;
-                  const paymentsMade = member.payments?.length || 0;
-                  const debtCount = monthsExpected - paymentsMade;
+                  const { debtCount } = calculateMemberDebt(member, config);
                   return debtCount > 0 
                     ? 'text-rose-400 bg-rose-400/10 border-rose-400/20 shadow-rose-500/20' 
                     : 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20 shadow-emerald-500/20';
                 })()
               }`}>
                 {(() => {
-                  const entryDate = new Date(member.entryDate);
-                  const now = new Date();
-                  let monthsExpected = (now.getFullYear() - entryDate.getFullYear()) * 12 + (now.getMonth() - entryDate.getMonth()) + 1;
-                  if (monthsExpected < 1) monthsExpected = 1;
-                  const paymentsMade = member.payments?.length || 0;
-                  const debtCount = monthsExpected - paymentsMade;
+                  const { debtCount } = calculateMemberDebt(member, config);
                   return debtCount > 0 ? 'Con Deuda' : 'Al Día';
                 })()}
               </div>
               {(() => {
-                const entryDate = new Date(member.entryDate);
-                const now = new Date();
-                let monthsExpected = (now.getFullYear() - entryDate.getFullYear()) * 12 + (now.getMonth() - entryDate.getMonth()) + 1;
-                if (monthsExpected < 1) monthsExpected = 1;
-                const paymentsMade = member.payments?.length || 0;
-                const debtCount = monthsExpected - paymentsMade;
+                const { debtCount, debtAmount } = calculateMemberDebt(member, config);
                 if (debtCount > 0) {
-                  const totalDebt = debtCount * (config?.monthlyFeeAmount || 500);
                   const currency = config?.monthlyFeeCurrency === 'USD' ? 'USD $' : '$';
-                  return <p className="text-[10px] font-bold text-rose-400/60 uppercase tracking-widest mr-1">Pendiente: {debtCount} cuotas ({currency}{totalDebt})</p>
+                  return <p className="text-[10px] font-bold text-rose-400/60 uppercase tracking-widest mr-1">Pendiente: {debtCount} cuotas ({currency}{debtAmount})</p>
                 }
                 return null;
               })()}
