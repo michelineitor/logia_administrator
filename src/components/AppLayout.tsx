@@ -48,8 +48,8 @@ export default function AppLayout({ children, role }: { children: React.ReactNod
       >
         <div className="mb-6 flex items-center gap-4">
           <button 
-            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="p-2 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-colors flex items-center justify-center"
+            onClick={() => setIsSidebarOpen(prev => !prev)}
+            className="p-2 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-colors flex items-center justify-center relative z-[60]"
             title={isSidebarOpen ? "Ocultar menú" : "Mostrar menú"}
           >
             <Menu className="w-5 h-5" />

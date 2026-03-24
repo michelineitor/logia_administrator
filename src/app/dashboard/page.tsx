@@ -18,7 +18,10 @@ import SimpleIndicators from './SimpleIndicators';
 import IncomesSection from './IncomesSection';
 import ExpensesSection from './ExpensesSection';
 import ProjectionsSection from './ProjectionsSection';
+import DeviationDisplay from './DeviationDisplay';
 import Link from 'next/link';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 
 function timeAgo(date: Date) {
   const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
@@ -41,8 +44,13 @@ export default async function DashboardPage() {
   const currentDate = new Date();
   const currentMonth = currentDate.getMonth();
 
-  const { cashUYU, cashUSD, bankUYU, bankUSD, lastArqueoDate } = await getConsolidatedBalances();
-  const { alerts } = await getFinancialHealth();
+  const session = await getServerSession(authOptions);
+  const { 
+    cashUYU, cashUSD, bankUYU, bankUSD, 
+    lastArqueoDate, 
+    pendingDeviationUYU, pendingDeviationUSD 
+  } = await getConsolidatedBalances();
+  const { alerts, lastArqueo } = await getFinancialHealth();
 
   const incomes = await prisma.income.findMany();
   const payments = await prisma.payment.findMany();
@@ -116,6 +124,14 @@ export default async function DashboardPage() {
 
       {/* 2. Indicadores Simples */}
       <SimpleIndicators />
+
+      {/* 2b. Desvíos y Arqueo (Subtle) */}
+      <DeviationDisplay 
+        lastArqueo={lastArqueo}
+        pendingDeviationUYU={pendingDeviationUYU || 0}
+        pendingDeviationUSD={pendingDeviationUSD || 0}
+        userRole={(session?.user as any)?.role}
+      />
 
       {/* 3. Disponibilidad de Fondos (Arqueo) */}
       <div>

@@ -7,6 +7,9 @@ import AppLayout from "@/components/AppLayout";
 export const metadata: Metadata = {
   title: "Soles y Rayos de Oriente No.7 - Gestión Administrativa",
   description: "Sistema interno de gestión para la ONG Soles y Rayos de Oriente No.7",
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 export default async function RootLayout({

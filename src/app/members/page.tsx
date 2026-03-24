@@ -50,16 +50,18 @@ export default async function MembersPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h2 className="text-xl font-bold flex items-center gap-2">
           <Users className="w-5 h-5 text-primary" />
           Gestión de Miembros
         </h2>
-        <MemberFormClient currentUserRole={role} currentUserPosition={currentUserPosition} />
+        <div className="w-full sm:w-auto flex justify-end">
+          <MemberFormClient currentUserRole={role} currentUserPosition={currentUserPosition} />
+        </div>
       </div>
 
       {/* Search & Filters */}
-      <div className="glass p-4 rounded-xl border border-white/5 flex gap-4">
+      <div className="glass p-4 rounded-xl border border-white/5 flex flex-col md:flex-row gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <input 
@@ -76,17 +78,17 @@ export default async function MembersPage() {
       </div>
 
       {/* Members Table */}
-      <div className="glass rounded-2xl border border-white/5 overflow-hidden">
-        <table className="w-full text-left border-collapse">
+      <div className="glass rounded-2xl border border-white/5 overflow-x-auto">
+        <table className="w-full text-left border-collapse min-w-[850px]">
           <thead>
             <tr className="border-b border-white/5 bg-white/[0.02]">
-              <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">Miembro</th>
-              <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">Rango</th>
-              <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">Cargo</th>
-              <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">Contacto</th>
-              <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">Estado</th>
-              <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">Ingreso</th>
-              <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">Acciones</th>
+              <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground whitespace-nowrap">Miembro</th>
+              <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground whitespace-nowrap">Rango</th>
+              <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground whitespace-nowrap">Cargo</th>
+              <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground whitespace-nowrap">Contacto</th>
+              <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground whitespace-nowrap">Estado</th>
+              <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground whitespace-nowrap">Ingreso</th>
+              <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground whitespace-nowrap text-right">Acciones</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">
@@ -148,7 +150,7 @@ export default async function MembersPage() {
                 <td className="px-6 py-4 text-sm text-muted-foreground">
                   {new Date(member.entryDate).toLocaleDateString('es-UY')}
                 </td>
-                <td className="px-6 py-4 text-sm">
+                <td className="px-6 py-4 text-sm text-right">
                   <MemberActionsClient 
                     member={member} 
                     currentUserRole={role} 

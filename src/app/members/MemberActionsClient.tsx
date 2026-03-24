@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { QrCode, ExternalLink, MoreVertical, Edit, Trash2, Loader2, X } from 'lucide-react';
-import { updateMember, deleteMember, updateMemberStatus } from './actions';
+import { QrCode, ExternalLink, MoreVertical, Edit, Trash2, Loader2, X, Shield } from 'lucide-react';
+import { updateMember, deleteMember, updateMemberStatus, updateMemberPassword } from './actions';
 import { useRouter } from 'next/navigation';
 
 const POSITIONS = [
@@ -41,8 +41,11 @@ export default function MemberActionsClient({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   
-  const toggleMenu = () => {
+  const toggleMenu = (e: React.MouseEvent) => {
+    // No prevenimos por defecto para permitir que otros eventos fluyan si es necesario
+    // pero calculamos la posición siempre que se intente abrir
     if (!isMenuOpen && menuTriggerRef.current) {
       const rect = menuTriggerRef.current.getBoundingClientRect();
       setMenuPosition({
@@ -50,7 +53,7 @@ export default function MemberActionsClient({
         right: window.innerWidth - rect.right
       });
     }
-    setIsMenuOpen(!isMenuOpen);
+    setIsMenuOpen(prev => !prev);
   };
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -89,7 +92,7 @@ export default function MemberActionsClient({
     return createPortal(
       <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4">
         <div className="absolute inset-0 bg-black/60 backdrop-blur-md" onClick={() => setIsQrModalOpen(false)} />
-        <div className="glass p-8 rounded-[2.5rem] border border-white/10 shadow-2xl relative z-10 w-full max-w-sm text-center animate-in zoom-in duration-300">
+        <div className="glass p-6 md:p-8 rounded-[1.5rem] md:rounded-[2.5rem] border border-white/10 shadow-2xl relative z-10 w-full max-w-sm text-center animate-in zoom-in duration-300">
           <button onClick={() => setIsQrModalOpen(false)} className="absolute right-6 top-6 text-white/30 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-full"><X className="w-5 h-5" /></button>
           <div className="mb-6">
             <h3 className="text-xl font-bold">Código QR Personal</h3>
@@ -133,12 +136,71 @@ export default function MemberActionsClient({
     );
   };
 
+  const renderPasswordModal = () => {
+    if (!mounted || !isPasswordModalOpen) return null;
+    return createPortal(
+      <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4">
+        <div className="absolute inset-0 bg-black/60 backdrop-blur-xl" onClick={() => setIsPasswordModalOpen(false)} />
+        <div className="glass w-full max-w-sm p-6 md:p-8 rounded-[1.5rem] md:rounded-[2.5rem] border border-white/10 shadow-2xl relative z-[100000] animate-in zoom-in duration-300">
+          <button onClick={() => setIsPasswordModalOpen(false)} className="absolute right-6 top-6 text-white/30 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-full"><X className="w-5 h-5" /></button>
+          
+          <div className="mb-8">
+            <h3 className="text-xl font-bold flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-amber-500/10 text-amber-500">
+                <Shield className="w-5 h-5" />
+              </div>
+              Nueva Contraseña
+            </h3>
+            <p className="text-xs text-muted-foreground mt-2">Establece una nueva contraseña de acceso para <strong>{member.fullName}</strong></p>
+          </div>
+
+          <form action={async (fd) => {
+            const newPassword = fd.get('password') as string;
+            if (!newPassword || newPassword.length < 6) {
+              alert("La contraseña debe tener al menos 6 caracteres.");
+              return;
+            }
+            setIsUpdating(true);
+            const res = await updateMemberPassword(member.id, newPassword);
+            setIsUpdating(false);
+            if (res.error) alert(res.error);
+            else {
+              alert(res.message);
+              setIsPasswordModalOpen(false);
+            }
+          }} className="space-y-6">
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-1">Nueva Contraseña</label>
+              <input 
+                type="password" 
+                name="password" 
+                required 
+                minLength={6}
+                placeholder="Mínimo 6 caracteres"
+                className="input-field-custom h-12" 
+                autoFocus
+              />
+            </div>
+
+            <div className="flex gap-4 justify-end pt-4">
+              <button type="button" onClick={() => setIsPasswordModalOpen(false)} className="px-4 py-2 rounded-xl text-xs font-bold text-muted-foreground uppercase tracking-widest hover:bg-white/5 transition-all">Cancelar</button>
+              <button type="submit" disabled={isUpdating} className="px-6 py-2 rounded-xl bg-amber-500 text-black text-xs font-bold uppercase tracking-wider hover:shadow-lg hover:shadow-amber-500/20 transition-all flex items-center justify-center gap-2">
+                {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Actualizar'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>,
+      document.body
+    );
+  };
+
   const renderEditModal = () => {
     if (!mounted || !isEditModalOpen) return null;
     return createPortal(
       <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4">
         <div className="absolute inset-0 bg-black/60 backdrop-blur-xl" onClick={() => setIsEditModalOpen(false)} />
-        <div className="glass w-full max-w-2xl p-8 rounded-[2.5rem] border border-white/10 shadow-2xl relative z-[100000] animate-in zoom-in duration-300 overflow-y-auto max-h-[90vh]">
+        <div className="glass w-full max-w-2xl p-6 md:p-8 rounded-[1.5rem] md:rounded-[2.5rem] border border-white/10 shadow-2xl relative z-[100000] animate-in zoom-in duration-300 overflow-y-auto max-h-[90vh]">
           <button onClick={() => setIsEditModalOpen(false)} className="absolute right-6 top-6 text-white/30 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-full"><X className="w-6 h-6" /></button>
           <h3 className="text-2xl font-bold mb-8 flex items-center gap-3">
              <div className="p-3 rounded-2xl bg-primary/10 text-primary">
@@ -238,7 +300,7 @@ export default function MemberActionsClient({
         <button 
           ref={menuTriggerRef}
           onClick={toggleMenu}
-          className={`p-2 hover:bg-white/10 rounded-lg transition-colors ${isMenuOpen ? 'bg-white/10 text-primary' : 'text-muted-foreground'}`}
+          className={`p-2 hover:bg-white/10 rounded-lg transition-colors relative z-10 ${isMenuOpen ? 'bg-white/10 text-primary' : 'text-muted-foreground'}`}
           title="Opciones"
         >
           <MoreVertical className="w-4 h-4" />
@@ -246,12 +308,12 @@ export default function MemberActionsClient({
 
         {mounted && isMenuOpen && createPortal(
           <>
-            <div className="fixed inset-0 z-[99998]" onClick={() => setIsMenuOpen(false)} />
+            <div className="fixed inset-0 z-[99990]" onClick={() => setIsMenuOpen(false)} />
             <div 
               className="fixed glass border border-white/10 rounded-2xl shadow-2xl z-[99999] p-2 animate-in fade-in slide-in-from-top-2 duration-200 w-48"
               style={{ 
                 top: `${menuPosition.top + 8}px`, 
-                right: `${menuPosition.right}px` 
+                right: `${menuPosition.right}px`
               }}
             >
               <button 
@@ -261,6 +323,16 @@ export default function MemberActionsClient({
                 <Edit className="w-4 h-4 text-primary" />
                 Editar Datos
               </button>
+              
+              {isAdmin && member.userId && (
+                <button 
+                  onClick={() => { setIsPasswordModalOpen(true); setIsMenuOpen(false); }}
+                  className="w-full flex items-center gap-3 px-4 py-2 text-sm hover:bg-amber-500/10 hover:text-amber-400 rounded-xl transition-colors"
+                >
+                  <Shield className="w-4 h-4" />
+                  Cambiar Contraseña
+                </button>
+              )}
               
               {canModify && (
                 <>
@@ -299,6 +371,7 @@ export default function MemberActionsClient({
 
       {renderQrModal()}
       {renderEditModal()}
+      {renderPasswordModal()}
 
       <style jsx>{`
         .input-field-custom {

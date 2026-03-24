@@ -1,5 +1,8 @@
 'use server'
 
+import { authOptions } from "@/lib/auth";
+import { getServerSession } from "next-auth";
+
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 
@@ -108,6 +111,25 @@ export async function registerCashCount(formData: FormData, userId: string) {
 export async function getCashCountsHistory() {
   return await (prisma as any).cashCount.findMany({
     orderBy: { date: 'desc' },
-    include: { registeredBy: true }
+    include: { registeredBy: true, clearedBy: true }
   });
+}
+
+export async function clearDeviations() {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user || !['ADMIN', 'LUMINAR'].includes((session.user as any).role)) {
+      return { error: "No tienes permiso para realizar esta acción. Solo Administradores y Luminares pueden limpiar diferencias." };
+    }
+
+    const now = new Date();
+    const userId = (session.user as any).id;
+    await (prisma as any).$executeRaw`UPDATE "CashCount" SET "isCleared" = true, "clearedAt" = ${now}, "clearedById" = ${userId} WHERE "isCleared" = false`;
+
+    revalidatePath('/dashboard');
+    revalidatePath('/treasury/balance');
+    return { success: true };
+  } catch (error: any) {
+    return { error: error.message || "Error al limpiar las diferencias" };
+  }
 }

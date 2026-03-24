@@ -38,8 +38,12 @@ export default function Sidebar({ isOpen, setIsOpen, role }: { isOpen: boolean, 
   return (
     <aside className={`sidebar glass border-r border-white/5 transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
       <div className="flex items-center gap-3 mb-10 px-2">
-        <div className="p-2 bg-primary/10 rounded-lg border border-primary/20">
-          <Sun className="w-6 h-6 text-primary" />
+        <div className="w-10 h-10 bg-primary/5 rounded-lg border border-primary/10 overflow-hidden flex items-center justify-center p-1">
+          <img 
+            src="/logo.png" 
+            alt="Logo" 
+            className="w-full h-full object-contain"
+          />
         </div>
         <div>
           <h2 className="text-sm font-bold gold-gradient italic leading-tight">Soles y Rayos</h2>

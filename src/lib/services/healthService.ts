@@ -196,11 +196,18 @@ export async function getConsolidatedBalances() {
     return base + incSum + paySum - expSum;
   };
 
+  const unclearedCounts: any[] = await (prisma as any).$queryRaw`SELECT * FROM "CashCount" WHERE "isCleared" = false AND "previousCountId" IS NOT NULL`;
+
+  const pendingDeviationUYU = unclearedCounts.reduce((sum: number, c: any) => sum + (c.deviationUYU || 0), 0);
+  const pendingDeviationUSD = unclearedCounts.reduce((sum: number, c: any) => sum + (c.deviationUSD || 0), 0);
+
   return {
     cashUYU: calc('CASH', 'UYU'),
     cashUSD: calc('CASH', 'USD'),
     bankUYU: calc('BANK_TRANSFER', 'UYU'),
     bankUSD: calc('BANK_TRANSFER', 'USD'),
+    pendingDeviationUYU,
+    pendingDeviationUSD,
     lastArqueoDate: lastArqueo?.date
   };
 }

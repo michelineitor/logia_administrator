@@ -37,8 +37,8 @@ export default function UserManagerClient({ initialUsers }: { initialUsers: any[
         </button>
       </div>
 
-      <div className="glass rounded-3xl border border-white/5 overflow-hidden">
-        <table className="w-full text-left">
+      <div className="glass rounded-3xl border border-white/5 overflow-x-auto">
+        <table className="w-full text-left min-w-[600px]">
           <thead className="bg-white/5 border-b border-white/10 text-xs text-muted-foreground font-bold uppercase tracking-wider">
             <tr>
               <th className="px-6 py-4">Usuario</th>

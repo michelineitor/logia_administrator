@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react';
-import { User, Phone, Mail, Shield, AlertCircle, CheckCircle, Save, CreditCard, Loader2, Lock, Eye, EyeOff } from 'lucide-react';
+import { User, Phone, Mail, Shield, AlertCircle, CheckCircle, Save, CreditCard, Loader2, Lock, Eye, EyeOff, Camera } from 'lucide-react';
+import { useRef } from 'react';
 import { updateProfileData, changePassword } from './actions';
 
 // ... (previous functions if any) ...
@@ -152,7 +153,24 @@ export default function ProfileClient({ initialData, userId }: any) {
   const [username, setUsername] = useState(user?.username || '');
   const [fullName, setFullName] = useState(member?.fullName || '');
   const [phone, setPhone] = useState(member?.phone || '');
+  const [imageUrl, setImageUrl] = useState(member?.imageUrl || '');
   const [loading, setLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        alert("La imagen es demasiado grande. Máximo 2MB.");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImageUrl(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -164,6 +182,7 @@ export default function ProfileClient({ initialData, userId }: any) {
       fd.append("memberId", member.id);
       fd.append("fullName", fullName);
       fd.append("phone", phone);
+      fd.append("imageUrl", imageUrl);
     }
     const res = await updateProfileData(fd, userId);
     setLoading(false);
@@ -191,13 +210,30 @@ export default function ProfileClient({ initialData, userId }: any) {
       <div className="lg:col-span-2 space-y-8">
         <form onSubmit={handleSubmit} className="glass p-8 rounded-3xl border border-white/5 space-y-8">
           <div className="flex items-center gap-4 border-b border-white/5 pb-6">
-            {member?.imageUrl ? (
-              <img src={member.imageUrl} alt={fullName} className="w-16 h-16 rounded-full object-cover border-2 border-primary/20" />
-            ) : (
-              <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-2xl">
-                {username?.charAt(0).toUpperCase()}
+          <div className="relative group">
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              onChange={handleFileChange} 
+              accept="image/*" 
+              className="hidden" 
+            />
+            <div 
+              onClick={() => fileInputRef.current?.click()}
+              className="w-20 h-20 rounded-full overflow-hidden border-4 border-primary/20 cursor-pointer relative group-hover:border-primary/50 transition-all shadow-xl"
+            >
+              {imageUrl ? (
+                <img src={imageUrl} alt={fullName} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
+              ) : (
+                <div className="w-full h-full bg-primary/20 flex items-center justify-center text-primary font-bold text-3xl">
+                  {username?.charAt(0).toUpperCase()}
+                </div>
+              )}
+              <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <Camera className="w-6 h-6 text-white" />
               </div>
-            )}
+            </div>
+          </div>
             <div>
               <h3 className="text-xl font-bold">{fullName || username}</h3>
               <div className="flex items-center gap-2">

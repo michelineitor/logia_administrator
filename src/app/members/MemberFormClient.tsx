@@ -106,7 +106,7 @@ export default function MemberFormClient({
           className="absolute inset-0 bg-black/70 backdrop-blur-xl" 
           onClick={() => setIsOpen(false)} 
         />
-        <div className="glass w-full max-w-2xl p-8 rounded-[2.5rem] border border-white/10 shadow-2xl relative z-10 animate-in zoom-in duration-300 overflow-y-auto max-h-[90vh]">
+        <div className="glass w-full max-w-2xl p-6 md:p-8 rounded-[1.5rem] md:rounded-[2.5rem] border border-white/10 shadow-2xl relative z-10 animate-in zoom-in duration-300 overflow-y-auto max-h-[90vh]">
           <button 
             type="button"
             onClick={() => setIsOpen(false)}

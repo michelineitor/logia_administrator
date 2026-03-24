@@ -43,11 +43,17 @@ export async function updateProfileData(formData: FormData, userId: string) {
     const memberId = formData.get("memberId") as string;
     const fullName = formData.get("fullName") as string;
     const phone = formData.get("phone") as string;
+    const imageUrl = formData.get("imageUrl") as string;
 
     if (memberId) {
       await (prisma.member as any).update({
         where: { id: memberId },
-        data: { email, fullName, phone: phone || undefined }
+        data: { 
+          email, 
+          fullName, 
+          phone: phone || undefined,
+          imageUrl: imageUrl || undefined
+        }
       });
     }
     

@@ -18,6 +18,13 @@ export default function TransactionFormsClient() {
     setCameraPreview(URL.createObjectURL(file));
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleCapture(file);
+    }
+  };
+
   const removeCaptured = () => {
     setCapturedFile(null);
     setCameraPreview(null);
@@ -234,6 +241,7 @@ export default function TransactionFormsClient() {
                             type="file" 
                             name="imageProof" 
                             accept="image/*"
+                            onChange={handleFileChange}
                             required={!capturedFile}
                             className="hidden"
                           />
@@ -367,6 +375,7 @@ export default function TransactionFormsClient() {
                             type="file" 
                             name="imageProof" 
                             accept="image/*"
+                            onChange={handleFileChange}
                             required={!capturedFile}
                             className="hidden"
                           />

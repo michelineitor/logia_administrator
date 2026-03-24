@@ -35,12 +35,12 @@ export default function Home() {
 
       <div className="glass p-10 rounded-2xl max-w-md w-full text-center space-y-8 relative z-10 border border-white/5">
         <div className="space-y-2">
-          <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-primary/20">
-            {/* SVG Sun Icon */}
-            <svg viewBox="0 0 24 24" className="w-12 h-12 text-primary" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <circle cx="12" cy="12" r="5" />
-              <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
-            </svg>
+          <div className="w-24 h-24 bg-primary/5 rounded-full flex items-center justify-center mx-auto mb-4 border border-primary/10 overflow-hidden p-2">
+            <img 
+              src="/logo.png" 
+              alt="Logo Soles y Rayos" 
+              className="w-full h-full object-contain"
+            />
           </div>
           <h1 className="text-3xl font-bold gold-gradient italic px-2">Soles y Rayos de Oriente No.7</h1>
           <p className="text-muted-foreground text-sm uppercase tracking-widest">Caballeros de la Luz</p>

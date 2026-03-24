@@ -25,6 +25,7 @@ model User {
   sessions           Session[]
   registeredSessions LodgeSession[]  @relation("RegisteredSessions")
   memberHistories    MemberHistory[]
+  cashCountsCleared CashCount[] @relation("ClearedCashCounts")
 }
 
 model Account {
@@ -180,6 +181,10 @@ model CashCount {
   registeredById  String?
   observations    String?
   registeredBy    User?    @relation("RegisteredCashCounts", fields: [registeredById], references: [id])
+  isCleared       Boolean   @default(false)
+  clearedAt       DateTime?
+  clearedById     String?
+  clearedBy       User?     @relation("ClearedCashCounts", fields: [clearedById], references: [id])
 }
 
 model LodgeSession {

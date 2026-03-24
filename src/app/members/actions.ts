@@ -182,3 +182,35 @@ export async function updateMemberStatus(id: string, status: Status) {
     return { error: "Error actualizando el estado" }
   }
 }
+
+export async function updateMemberPassword(memberId: string, newPassword: string) {
+  try {
+    const session = await getServerSession(authOptions);
+    const currentUserRole = (session?.user as any)?.role;
+
+    if (currentUserRole !== 'ADMIN') {
+      return { error: "No tienes permisos para realizar esta acción." };
+    }
+
+    const member = await (prisma.member as any).findUnique({
+      where: { id: memberId },
+      select: { userId: true, fullName: true }
+    });
+
+    if (!member || !member.userId) {
+      return { error: "Este miembro no tiene una cuenta de usuario vinculada." };
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    await (prisma.user as any).update({
+      where: { id: member.userId },
+      data: { password: hashedPassword }
+    });
+
+    return { success: true, message: `Contraseña actualizada correctamente para ${member.fullName}` };
+  } catch (err: any) {
+    console.error("Error updating password:", err);
+    return { error: "Error al actualizar la contraseña." };
+  }
+}
