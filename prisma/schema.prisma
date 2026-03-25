@@ -185,6 +185,19 @@ model CashCount {
   clearedAt       DateTime?
   clearedById     String?
   clearedBy       User?     @relation("ClearedCashCounts", fields: [clearedById], references: [id])
+  
+  status          CashCountStatus @default(PENDING)
+  approvedByLuminarId  String?
+  approvedByTesoreroId String?
+  
+  resolvedByLuminarId  String?
+  resolvedByTesoreroId String?
+}
+
+enum CashCountStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 model LodgeSession {

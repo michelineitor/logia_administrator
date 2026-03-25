@@ -228,7 +228,12 @@ export default async function DashboardPage() {
       {/* 6. Actividad y Cultura */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 glass p-8 rounded-2xl border border-white/5 relative">
-          <h3 className="text-lg font-bold mb-6">Actividad Reciente</h3>
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-lg font-bold">Actividad Reciente</h3>
+            <Link href="/dashboard/activity" className="text-xs font-bold text-primary hover:underline flex items-center gap-1">
+              Ver todo
+            </Link>
+          </div>
           <div className="space-y-6">
             {recentActivity.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-4">No hay actividad reciente.</p>

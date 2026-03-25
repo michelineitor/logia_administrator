@@ -133,3 +133,82 @@ export async function clearDeviations() {
     return { error: error.message || "Error al limpiar las diferencias" };
   }
 }
+
+export async function approveCashCount(id: string) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user) return { error: "No autenticado" };
+    
+    const role = (session.user as any).role;
+    const userId = (session.user as any).id;
+
+    if (!['LUMINAR', 'TESORERO', 'ADMIN'].includes(role)) {
+      return { error: "No tienes permiso para aprobar arqueos" };
+    }
+
+    const count = await (prisma as any).cashCount.findUnique({ where: { id } });
+    if (!count) return { error: "Arqueo no encontrado" };
+
+    const updateData: any = {};
+    if (role === 'LUMINAR' || role === 'ADMIN') updateData.approvedByLuminarId = userId;
+    if (role === 'TESORERO' || role === 'ADMIN') updateData.approvedByTesoreroId = userId;
+
+    const updated = await (prisma as any).cashCount.update({
+      where: { id },
+      data: updateData
+    });
+
+    if (updated.approvedByLuminarId && updated.approvedByTesoreroId) {
+      await (prisma as any).cashCount.update({
+        where: { id },
+        data: { status: 'APPROVED' }
+      });
+    }
+
+    revalidatePath('/treasury/balance');
+    revalidatePath('/treasury/audits');
+    return { success: true };
+  } catch (error: any) {
+    return { error: error.message || "Error al aprobar el arqueo" };
+  }
+}
+
+export async function approveDifferenceResolution(id: string) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user) return { error: "No autenticado" };
+    
+    const role = (session.user as any).role;
+    const userId = (session.user as any).id;
+
+    if (!['LUMINAR', 'TESORERO', 'ADMIN'].includes(role)) {
+      return { error: "No tienes permiso para aprobar resoluciones" };
+    }
+
+    const count = await (prisma as any).cashCount.findUnique({ where: { id } });
+    if (!count) return { error: "Arqueo no encontrado" };
+
+    const updateData: any = {};
+    if (role === 'LUMINAR' || role === 'ADMIN') updateData.resolvedByLuminarId = userId;
+    if (role === 'TESORERO' || role === 'ADMIN') updateData.resolvedByTesoreroId = userId;
+
+    const updated = await (prisma as any).cashCount.update({
+      where: { id },
+      data: updateData
+    });
+
+    if (updated.resolvedByLuminarId && updated.resolvedByTesoreroId) {
+      await (prisma as any).cashCount.update({
+        where: { id },
+        data: { isCleared: true, clearedAt: new Date(), clearedById: userId }
+      });
+    }
+
+    revalidatePath('/dashboard');
+    revalidatePath('/treasury/balance');
+    revalidatePath('/treasury/audits');
+    return { success: true };
+  } catch (error: any) {
+    return { error: error.message || "Error al aprobar la resolución" };
+  }
+}

@@ -10,7 +10,9 @@ import {
   Scale,
   Shield,
   User as UserIcon,
-  AlertCircle
+  AlertCircle,
+  Eye,
+  CheckCircle
 } from 'lucide-react';
 
 const menuItems = [
@@ -19,6 +21,8 @@ const menuItems = [
   { icon: CreditCard, label: 'Pagos', href: '/payments' },
   { icon: Wallet, label: 'Tesorería', href: '/treasury' },
   { icon: Scale, label: 'Arqueo de Caja', href: '/treasury/balance' },
+  { icon: CheckCircle, label: 'Gestión de Arqueos', href: '/treasury/audits' },
+  { icon: Eye, label: 'Transparencia', href: '/transparency/monthly' },
   { icon: Shield, label: 'Usuarios', href: '/settings/users' },
   { icon: AlertCircle, label: 'Alertas', href: '/settings/alerts' },
   { icon: Settings, label: 'Configuración', href: '/settings' },
@@ -30,7 +34,11 @@ export default function Sidebar({ isOpen, setIsOpen, role }: { isOpen: boolean, 
 
   const visibleItems = menuItems.filter(item => {
     if (isBasic) {
-      return item.href === '/dashboard' || item.href === '/profile';
+      return item.href === '/dashboard' || item.href === '/profile' || item.href === '/transparency/monthly';
+    }
+    // Only Tesorero, Luminar, Admin can see Audit Management
+    if (item.href === '/treasury/audits' && !['ADMIN', 'LUMINAR', 'TESORERO'].includes(role || '')) {
+      return false;
     }
     return true;
   });
