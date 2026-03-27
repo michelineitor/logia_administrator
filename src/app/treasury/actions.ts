@@ -42,20 +42,13 @@ export async function getTransactions() {
 }
 
 async function handleFileUpload(formData: FormData): Promise<string> {
-  const file = formData.get("imageProof") as File;
-  if (!file || file.size === 0) {
+  const photoBase64 = formData.get("imageProof") as string;
+  if (!photoBase64 || photoBase64.length === 0) {
     throw new Error("El comprobante (foto) es obligatorio");
   }
 
-  const buffer = Buffer.from(await file.arrayBuffer());
-  const ext = file.name.split('.').pop() || 'jpg';
-  const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${ext}`;
-  const uploadDir = path.join(process.cwd(), 'public', 'uploads');
-  
-  await fs.mkdir(uploadDir, { recursive: true });
-  await fs.writeFile(path.join(uploadDir, fileName), buffer);
-  
-  return `/uploads/${fileName}`;
+  // It's already a base64 string from the client
+  return photoBase64;
 }
 
 function parseDate(formData: FormData): Date {

@@ -18,6 +18,8 @@ const POSITIONS = [
   { value: 'GUARDA_TEMPLO_EXTERIOR', label: 'Guarda-Templo-Exterior' },
   { value: 'PATRIARCA', label: 'Patriarca' },
   { value: 'LPI', label: 'LPI' },
+  { value: 'EXPERTO', label: 'Experto' },
+  { value: 'MAESTRO_CEREMONIAS', label: 'Maestro de Ceremonias' },
 ];
 
 const CATEGORIES = [

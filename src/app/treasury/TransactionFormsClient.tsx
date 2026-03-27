@@ -15,12 +15,20 @@ export default function TransactionFormsClient() {
 
   const handleCapture = (file: File) => {
     setCapturedFile(file);
-    setCameraPreview(URL.createObjectURL(file));
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setCameraPreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        setError("La imagen es demasiado grande. Máximo 2MB.");
+        return;
+      }
       handleCapture(file);
     }
   };
@@ -36,8 +44,8 @@ export default function TransactionFormsClient() {
     setError('');
 
     const formData = new FormData(e.currentTarget);
-    if (capturedFile) {
-      formData.set("imageProof", capturedFile);
+    if (cameraPreview) {
+      formData.set("imageProof", cameraPreview);
     }
     const result = await createIncome(formData);
 
@@ -55,8 +63,8 @@ export default function TransactionFormsClient() {
     setError('');
 
     const formData = new FormData(e.currentTarget);
-    if (capturedFile) {
-      formData.set("imageProof", capturedFile);
+    if (cameraPreview) {
+      formData.set("imageProof", cameraPreview);
     }
     const result = await createExpense(formData);
 
@@ -74,8 +82,8 @@ export default function TransactionFormsClient() {
     setError('');
 
     const formData = new FormData(e.currentTarget);
-    if (capturedFile) {
-      formData.set("imageProof", capturedFile);
+    if (cameraPreview) {
+      formData.set("imageProof", cameraPreview);
     }
     const result = await createLodgeSession(formData);
 
