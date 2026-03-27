@@ -111,7 +111,7 @@ export default async function VerifyPage({ params }: { params: { memberId: strin
 
         <div className="text-[10px] text-muted-foreground uppercase tracking-widest leading-relaxed">
           Esta información es oficial y de carácter público.<br />
-          Socio-Caridad-Unión
+          Benevolencia - Educación - Fraternidad
         </div>
       </div>
     </main>

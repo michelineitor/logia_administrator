@@ -79,8 +79,8 @@ export default function Home() {
           </button>
         </form>
 
-        <div className="pt-6 border-t border-white/5 text-[10px] text-muted-foreground uppercase tracking-widest">
-          Socio-Caridad-Unión
+        <div className="pt-6 border-t border-white/5 text-[10px] text-muted-foreground uppercase tracking-widest text-center">
+          Benevolencia - Educación - Fraternidad
         </div>
       </div>
     </main>

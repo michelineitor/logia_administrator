@@ -94,7 +94,7 @@ export async function generateReceiptPDF(data: ReceiptData): Promise<Buffer> {
   // Page Footer
   doc.setFontSize(8);
   doc.setTextColor(160, 160, 160);
-  doc.text("Socio - Caridad - Unión", pageWidth / 2, 280, { align: "center" });
+  doc.text("Benevolencia - Educación - Fraternidad", pageWidth / 2, 280, { align: "center" });
   
   const now = new Date();
   doc.text(`Generado el ${now.toLocaleDateString()} a las ${now.toLocaleTimeString()}`, pageWidth / 2, 285, { align: "center" });
