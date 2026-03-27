@@ -92,6 +92,10 @@ export default function PaymentsClient({ payments, members, config, isAdmin }: {
     setLoading(false);
   }
 
+  const downloadReceipt = (id: string) => {
+    window.open(`/api/payments/${id}/receipt`, '_blank');
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -184,7 +188,11 @@ export default function PaymentsClient({ payments, members, config, isAdmin }: {
                 </td>
                 <td className="px-6 py-4 text-sm">
                   <div className="flex gap-2">
-                    <button className="p-2 hover:bg-white/10 rounded-lg transition-colors text-muted-foreground hover:text-primary" title="Descargar Recibo">
+                    <button 
+                      onClick={() => downloadReceipt(p.id)}
+                      className="p-2 hover:bg-white/10 rounded-lg transition-colors text-muted-foreground hover:text-primary" 
+                      title="Descargar Recibo"
+                    >
                       <Download className="w-4 h-4" />
                     </button>
                     {isAdmin && p.status !== 'CANCELADO' && (

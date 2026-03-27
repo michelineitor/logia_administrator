@@ -22,15 +22,19 @@ export async function GET(
     const pdfBuffer = await generateReceiptPDF({
       memberName: payment.member.fullName,
       amount: payment.amount,
+      currency: payment.currency,
       date: payment.date.toLocaleDateString('es-UY'),
       concept: `Cuota Mensual - ${monthName} ${payment.yearPaid}`,
-      receiptNumber: payment.id.substring(0, 8).toUpperCase()
+      receiptNumber: payment.id.substring(0, 8).toUpperCase(),
+      paymentId: payment.id
     });
+
+    const safeFileName = `recibo-${payment.member.fullName.replace(/[^a-z0-9]/gi, '-')}-${monthName}-${payment.yearPaid}.pdf`;
 
     return new NextResponse(pdfBuffer as any, {
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename=recibo-${payment.member.fullName.replace(/\s+/g, '-')}-${monthName}-${payment.yearPaid}.pdf`
+        "Content-Disposition": `attachment; filename="${safeFileName}"`
       }
     });
   } catch (error) {
